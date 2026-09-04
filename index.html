@@ -9,26 +9,34 @@
   <style>
     body { font-family: 'Vazirmatn', sans-serif; }
     textarea { resize: vertical; }
+    /* افکت‌های مربوط به ساعت دایره‌ای */
+    .clock-slice { transition: fill 0.3s ease; }
+    .clock-slice:hover { opacity: 0.8; }
   </style>
 </head>
 <body class="bg-slate-100 text-slate-800">
+
+  <!-- Tooltip برای ساعت -->
+  <div id="clockTooltip" class="fixed hidden bg-slate-900 text-white text-xs p-2 rounded-lg shadow-xl z-50 pointer-events-none max-w-xs whitespace-pre-wrap leading-relaxed"></div>
+
   <header class="bg-slate-900 text-white p-5 border-b border-slate-700 shadow-md">
     <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
       <div>
         <h1 class="text-2xl font-bold text-amber-400">داشبورد دکتری حقوق تجارت و سرمایه‌گذاری بین‌المللی</h1>
-        <p class="text-sm text-slate-300 mt-1">بازه هدف: شنبه ۱۵ شهریور ۱۴۰۵ تا جمعه ۱۶ بهمن ۱۴۰۵ (روز آزمون)</p>
+        <p class="text-sm text-slate-300 mt-1">بازه هدف: شنبه ۱۴ شهریور ۱۴۰۵ تا جمعه ۱۶ بهمن ۱۴۰۵ (روز آزمون)</p>
       </div>
       <div class="flex gap-2">
-        <button onclick="exportData()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-sm font-medium transition">پشتیبان‌گیری (JSON)</button>
-        <label class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium cursor-pointer transition">
+        <button onclick="exportData()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-sm font-medium transition shadow-lg">پشتیبان‌گیری (JSON)</button>
+        <label class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium cursor-pointer transition shadow-lg">
           بازیابی فایل
-          <input type="file" id="importInput" onchange="importData(event)" class="hidden">
+          <input type="file" onchange="importData(event)" class="hidden">
         </label>
       </div>
     </div>
   </header>
 
   <main class="max-w-6xl mx-auto p-4 sm:p-6 space-y-6">
+    <!-- انتخابگر زمان -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
       <div>
         <label class="block text-xs font-semibold text-slate-500 mb-1">انتخاب ماه:</label>
@@ -48,7 +56,6 @@
     <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
       <div class="bg-slate-800 text-white px-5 py-3 flex justify-between items-center">
         <h2 id="monthTitle" class="font-bold">اهداف ماهانه</h2>
-        <span class="text-xs bg-slate-700 px-2.5 py-1 rounded">ظرفیت: ۲۰ خط برنامه</span>
       </div>
       <div class="p-5">
         <textarea id="monthText" rows="6" oninput="saveContent('month')" placeholder="اهداف، فصول مورد مطالعه و برنامه‌ریزی ماهانه (۲۰ خط)..." class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-400 outline-none leading-relaxed"></textarea>
@@ -58,54 +65,100 @@
     <!-- بخش هفته -->
     <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
       <div class="bg-indigo-900 text-white px-5 py-3 flex justify-between items-center">
-        <h2 id="weekTitle" class="font-bold">اهداف هفتگی</h2>
-        <span class="text-xs bg-indigo-800 px-2.5 py-1 rounded">ظرفیت: ۱۰ خط برنامه</span>
+        <h2 id="weekTitle" class="font-bold">برنامه و چک‌لیست هفتگی</h2>
       </div>
-      <div class="p-5">
-        <textarea id="weekText" rows="4" oninput="saveContent('week')" placeholder="اهداف هفتگی، آزمون‌های آزمایشی و تست‌زنی (۱۰ خط)..." class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none leading-relaxed"></textarea>
+      <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label class="block text-sm font-bold text-slate-700 mb-2">اهداف کلی هفته (۱۰ خط):</label>
+          <textarea id="weekText" rows="6" oninput="saveContent('week')" placeholder="اهداف هفتگی، آزمون‌های آزمایشی و تست‌زنی..." class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none leading-relaxed"></textarea>
+        </div>
+        <div>
+          <div class="flex justify-between items-center mb-2">
+            <label class="block text-sm font-bold text-slate-700">چک‌لیست تسک‌های هفتگی:</label>
+            <button onclick="addChecklist('week')" class="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded hover:bg-indigo-200">+ افزودن تسک</button>
+          </div>
+          <div id="weekChecklist" class="space-y-1"></div>
+        </div>
       </div>
     </section>
 
     <!-- بخش روزانه و ۲۴ ساعت -->
     <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
       <div class="bg-amber-600 text-white px-5 py-3 flex justify-between items-center">
-        <h2 id="dayTitle" class="font-bold">برنامه روزانه</h2>
-        <span class="text-xs bg-amber-700 px-2.5 py-1 rounded">۳ خط کل روز + تفکیک ۲۴ ساعته</span>
+        <h2 id="dayTitle" class="font-bold">برنامه روزانه و زمان‌بندی</h2>
       </div>
-      <div class="p-5 space-y-6">
-        <div>
-          <label class="block text-sm font-semibold text-slate-700 mb-2">یادداشت و اهداف اصلی کل این روز (۳ خط):</label>
-          <textarea id="daySummaryText" rows="3" oninput="saveContent('daySummary')" placeholder="خلاصه بازدهی و اولویت‌های این روز..." class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-400 outline-none leading-relaxed"></textarea>
+      <div class="p-5 space-y-8">
+        
+        <!-- یادداشت کل روز و چک لیست روزانه -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-sm font-bold text-slate-700 mb-2">اولویت‌های اصلی این روز (۳ خط):</label>
+            <textarea id="daySummaryText" rows="4" oninput="saveContent('daySummary')" placeholder="خلاصه بازدهی و اولویت‌های این روز..." class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-400 outline-none leading-relaxed"></textarea>
+          </div>
+          <div>
+            <div class="flex justify-between items-center mb-2">
+              <label class="block text-sm font-bold text-slate-700">چک‌لیست کارهای روزانه:</label>
+              <button onclick="addChecklist('day')" class="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded hover:bg-amber-200">+ افزودن تسک</button>
+            </div>
+            <div id="dayChecklist" class="space-y-1"></div>
+          </div>
         </div>
 
+        <hr class="border-slate-200">
+
+        <!-- ساعت‌های بصری -->
         <div>
-          <h3 class="text-sm font-bold text-slate-700 mb-3 border-b pb-2">تفکیک برنامه ساعتی (۲۴ ساعت):</h3>
+          <h3 class="text-sm font-bold text-slate-700 mb-4 text-center">وضعیت تخصیص زمان در طول ۲۴ ساعت (برای مشاهده برنامه، موس را روی بخش‌های رنگی ببرید)</h3>
+          <div class="flex justify-center gap-10 md:gap-20">
+            <div class="flex flex-col items-center">
+              <span class="text-xs font-bold text-slate-500 mb-2">بامداد تا ظهر (۰۰:۰۰ تا ۱۲:۰۰)</span>
+              <div id="clockAM" class="relative"></div>
+            </div>
+            <div class="flex flex-col items-center">
+              <span class="text-xs font-bold text-slate-500 mb-2">ظهر تا نیمه‌شب (۱۲:۰۰ تا ۲۴:۰۰)</span>
+              <div id="clockPM" class="relative"></div>
+            </div>
+          </div>
+        </div>
+
+        <hr class="border-slate-200">
+
+        <!-- فیلدهای متنی 24 ساعته -->
+        <div>
+          <h3 class="text-sm font-bold text-slate-700 mb-4">جزئیات برنامه‌ریزی ساعتی:</h3>
           <div id="hourlyGrid" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
         </div>
+
       </div>
     </section>
   </main>
 
   <script>
+    // 1. تنظیم تقویم: شروع از ۱۴ شهریور
     const months = [
-      { id: 'm1', name: 'شهریور ۱۴۰۵', days: 17, startDayName: 'شنبه', offset: 15 },
-      { id: 'm2', name: 'مهر ۱۴۰۵', days: 30, startDayName: 'سه‌شنبه', offset: 1 },
-      { id: 'm3', name: 'آبان ۱۴۰۵', days: 30, startDayName: 'پنج‌شنبه', offset: 1 },
-      { id: 'm4', name: 'آذر ۱۴۰۵', days: 30, startDayName: 'شنبه', offset: 1 },
-      { id: 'm5', name: 'دی ۱۴۰۵', days: 30, startDayName: 'دوشنبه', offset: 1 },
-      { id: 'm6', name: 'بهمن ۱۴۰۵ (تا ۱۶ام)', days: 16, startDayName: 'چهارشنبه', offset: 1 }
+      { id: 'm1', name: 'شهریور', days: 18, offset: 14 }, // 14 to 31
+      { id: 'm2', name: 'مهر', days: 30, offset: 1 },
+      { id: 'm3', name: 'آبان', days: 30, offset: 1 },
+      { id: 'm4', name: 'آذر', days: 30, offset: 1 },
+      { id: 'm5', name: 'دی', days: 30, offset: 1 },
+      { id: 'm6', name: 'بهمن', days: 16, offset: 1 } // up to 16th
     ];
 
     const weekDays = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنج‌شنبه', 'جمعه'];
-
+    
     let allDays = [];
+    let weeks = [];
     let currentDayIndex = 0;
 
+    let activeWeeklyChecklist = [];
+    let activeDailyChecklist = [];
+
+    // 2. مقدار دهی تقویم و ساختار هفته‌ها
     function initCalendar() {
       let globalDayId = 1;
-      let dayNameCursor = 0; // شنبه ۱۵ شهریور
+      let dayNameCursor = 0; 
 
-      months.forEach((m, mIdx) => {
+      months.forEach((m) => {
         for (let d = 0; d < m.days; d++) {
           const dayNum = m.offset + d;
           const dayName = weekDays[dayNameCursor % 7];
@@ -126,23 +179,28 @@
         }
       });
 
+      // استخراج داده‌های هفته برای نمایش بازه تاریخی (مثلا 14 تا 20)
+      const totalWeeks = Math.ceil(allDays.length / 7);
+      for (let i = 0; i < totalWeeks; i++) {
+        const weekDaysArr = allDays.slice(i * 7, (i + 1) * 7);
+        const first = weekDaysArr[0];
+        const last = weekDaysArr[weekDaysArr.length - 1];
+        weeks.push({
+          id: `w_${i+1}`,
+          label: `هفته ${i+1} (${first.dayNum} ${first.monthName} تا ${last.dayNum} ${last.monthName})`
+        });
+      }
+
+      initClocks();
       renderSelectors();
       renderHourlyInputs();
       loadActiveViews();
     }
 
+    // 3. رندر کردن Select ها
     function renderSelectors() {
-      const mSel = document.getElementById('monthSelect');
-      mSel.innerHTML = months.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
-
-      const totalWeeks = Math.ceil(allDays.length / 7);
-      const wSel = document.getElementById('weekSelect');
-      let wHtml = '';
-      for (let i = 1; i <= totalWeeks; i++) {
-        wHtml += `<option value="w_${i}">هفته ${i}</option>`;
-      }
-      wSel.innerHTML = wHtml;
-
+      document.getElementById('monthSelect').innerHTML = months.map(m => `<option value="${m.id}">${m.name} ۱۴۰۵</option>`).join('');
+      document.getElementById('weekSelect').innerHTML = weeks.map(w => `<option value="${w.id}">${w.label}</option>`).join('');
       updateDaySelect();
     }
 
@@ -152,6 +210,40 @@
       dSel.value = currentDayIndex;
     }
 
+    // 4. رسم ساعت‌های SVG
+    function initClocks() {
+      document.getElementById('clockAM').innerHTML = createClockSVG(0, 'am');
+      document.getElementById('clockPM').innerHTML = createClockSVG(12, 'pm');
+    }
+
+    function createClockSVG(startHour, type) {
+      let svg = `<svg viewBox="0 0 100 100" class="w-32 h-32 md:w-40 md:h-40 transform -rotate-90 rounded-full bg-slate-100 shadow-inner">`;
+      for(let i=0; i<12; i++) {
+         const h = startHour + i;
+         const a1 = (i * 30) * Math.PI / 180;
+         const a2 = ((i+1) * 30) * Math.PI / 180;
+         const x1 = 50 + 50 * Math.cos(a1);
+         const y1 = 50 + 50 * Math.sin(a1);
+         const x2 = 50 + 50 * Math.cos(a2);
+         const y2 = 50 + 50 * Math.sin(a2);
+         svg += `<path id="slice_${h}" d="M50,50 L${x1},${y1} A50,50 0 0,1 ${x2},${y2} Z" fill="#e2e8f0" stroke="#fff" stroke-width="0.5" class="clock-slice cursor-pointer" onmousemove="showTooltip(event, ${h})" onmouseleave="hideTooltip()" onclick="document.getElementById('h_${h}').focus()"/>`;
+      }
+      // مرکز ساعت
+      svg += `<circle cx="50" cy="50" r="10" fill="#fff" shadow="sm"/>`;
+      svg += `</svg>`;
+      
+      // افزودن نشانگرهای 12، 3، 6، 9 (اختیاری برای زیبایی)
+      const labels = type === 'am' ? ['۰', '۳', '۶', '۹'] : ['۱۲', '۱۵', '۱۸', '۲۱'];
+      svg += `<div class="absolute inset-0 pointer-events-none flex items-center justify-center">
+        <span class="absolute top-1 text-[10px] text-slate-400 font-bold">${labels[0]}</span>
+        <span class="absolute right-1 text-[10px] text-slate-400 font-bold">${labels[1]}</span>
+        <span class="absolute bottom-1 text-[10px] text-slate-400 font-bold">${labels[2]}</span>
+        <span class="absolute left-1 text-[10px] text-slate-400 font-bold">${labels[3]}</span>
+      </div>`;
+      return svg;
+    }
+
+    // 5. ساخت فیلدهای 24 ساعتی
     function renderHourlyInputs() {
       const grid = document.getElementById('hourlyGrid');
       let html = '';
@@ -160,13 +252,14 @@
         html += `
           <div class="flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-200">
             <span class="text-xs font-mono font-bold text-slate-500 w-24">${timeLabel}</span>
-            <input type="text" id="h_${h}" oninput="saveHour(${h})" placeholder="برنامه این ساعت..." class="w-full text-xs p-1.5 bg-white border border-slate-300 rounded outline-none focus:border-amber-500">
+            <input type="text" id="h_${h}" oninput="saveHour(${h})" placeholder="برنامه این ساعت..." class="w-full text-sm p-1.5 bg-white border border-slate-300 rounded outline-none focus:border-amber-500 transition-colors">
           </div>
         `;
       }
       grid.innerHTML = html;
     }
 
+    // 6. تغییر بازه‌های زمانی
     function changeDay() {
       currentDayIndex = parseInt(document.getElementById('daySelect').value);
       const cur = allDays[currentDayIndex];
@@ -197,10 +290,13 @@
       }
     }
 
+    // 7. بارگذاری اطلاعات در صفحه
     function loadActiveViews() {
       const cur = allDays[currentDayIndex];
+      const currentWeek = weeks.find(w => w.id === cur.weekId);
+      
       document.getElementById('monthTitle').innerText = `برنامه ماهانه: ${cur.monthName}`;
-      document.getElementById('weekTitle').innerText = `برنامه هفتگی: ${document.getElementById('weekSelect').options[document.getElementById('weekSelect').selectedIndex].text}`;
+      document.getElementById('weekTitle').innerText = `برنامه ${currentWeek.label}`;
       document.getElementById('dayTitle').innerText = `برنامه روز: ${cur.title}`;
 
       document.getElementById('monthText').value = localStorage.getItem(`note_m_${cur.monthId}`) || '';
@@ -210,8 +306,17 @@
       for (let h = 0; h < 24; h++) {
         document.getElementById(`h_${h}`).value = localStorage.getItem(`note_h_${cur.id}_${h}`) || '';
       }
+
+      // بارگذاری چک‌لیست‌ها (پیش‌فرض ۵ آیتم خالی)
+      const defaultChecklist = Array.from({length: 5}, () => ({text:'', checked:false}));
+      activeWeeklyChecklist = JSON.parse(localStorage.getItem(`chk_w_${cur.weekId}`)) || JSON.parse(JSON.stringify(defaultChecklist));
+      activeDailyChecklist = JSON.parse(localStorage.getItem(`chk_d_${cur.id}`)) || JSON.parse(JSON.stringify(defaultChecklist));
+      
+      renderChecklists();
+      syncClocks();
     }
 
+    // 8. ذخیره سازی متون ساده و ساعت‌ها
     function saveContent(type) {
       const cur = allDays[currentDayIndex];
       if (type === 'month') localStorage.setItem(`note_m_${cur.monthId}`, document.getElementById('monthText').value);
@@ -222,18 +327,106 @@
     function saveHour(h) {
       const cur = allDays[currentDayIndex];
       localStorage.setItem(`note_h_${cur.id}_${h}`, document.getElementById(`h_${h}`).value);
+      syncClocks(); // رنگ آمیزی آنلاین ساعت دایره‌ای
     }
 
+    // 9. منطق چک‌لیست‌ها
+    function renderChecklists() {
+      const wContainer = document.getElementById('weekChecklist');
+      wContainer.innerHTML = activeWeeklyChecklist.map((item, i) => createChecklistHtml('week', i, item)).join('');
+      
+      const dContainer = document.getElementById('dayChecklist');
+      dContainer.innerHTML = activeDailyChecklist.map((item, i) => createChecklistHtml('day', i, item)).join('');
+    }
+
+    function createChecklistHtml(type, index, item) {
+       const lineThrough = item.checked ? 'line-through text-slate-400' : 'text-slate-700';
+       return `<div class="flex items-center gap-2 mb-1.5">
+         <input type="checkbox" id="chk_${type}_cb_${index}" ${item.checked?'checked':''} onchange="updateChecklist('${type}', ${index})" class="w-4 h-4 text-amber-500 rounded border-slate-300 focus:ring-amber-500 cursor-pointer">
+         <input type="text" id="chk_${type}_txt_${index}" value="${item.text}" oninput="updateChecklist('${type}', ${index})" placeholder="عنوان وظیفه..." class="w-full text-sm p-1.5 bg-white border border-slate-200 rounded outline-none focus:border-amber-400 ${lineThrough}">
+         <button onclick="removeChecklist('${type}', ${index})" class="text-red-400 hover:text-red-600 font-bold px-2" title="حذف">&times;</button>
+       </div>`;
+    }
+
+    function updateChecklist(type, index) {
+       const cur = allDays[currentDayIndex];
+       const list = type === 'week' ? activeWeeklyChecklist : activeDailyChecklist;
+       
+       list[index].checked = document.getElementById(`chk_${type}_cb_${index}`).checked;
+       list[index].text = document.getElementById(`chk_${type}_txt_${index}`).value;
+       
+       const key = type === 'week' ? `chk_w_${cur.weekId}` : `chk_d_${cur.id}`;
+       localStorage.setItem(key, JSON.stringify(list));
+
+       const txtInput = document.getElementById(`chk_${type}_txt_${index}`);
+       if (list[index].checked) {
+           txtInput.classList.add('line-through', 'text-slate-400');
+           txtInput.classList.remove('text-slate-700');
+       } else {
+           txtInput.classList.remove('line-through', 'text-slate-400');
+           txtInput.classList.add('text-slate-700');
+       }
+    }
+
+    function addChecklist(type) {
+       const list = type === 'week' ? activeWeeklyChecklist : activeDailyChecklist;
+       list.push({text:'', checked:false});
+       renderChecklists();
+       updateChecklist(type, list.length - 1);
+    }
+
+    function removeChecklist(type, index) {
+       const list = type === 'week' ? activeWeeklyChecklist : activeDailyChecklist;
+       list.splice(index, 1);
+       renderChecklists();
+       const cur = allDays[currentDayIndex];
+       const key = type === 'week' ? `chk_w_${cur.weekId}` : `chk_d_${cur.id}`;
+       localStorage.setItem(key, JSON.stringify(list));
+    }
+
+    // 10. اتصال ساعت‌های دایره‌ای به فیلدها و Tooltip
+    function syncClocks() {
+       const cur = allDays[currentDayIndex];
+       for(let h=0; h<24; h++) {
+          const slice = document.getElementById(`slice_${h}`);
+          const val = localStorage.getItem(`note_h_${cur.id}_${h}`);
+          if (slice) {
+             if (val && val.trim() !== '') {
+                slice.setAttribute('fill', '#f59e0b'); // Amber 500
+             } else {
+                slice.setAttribute('fill', '#e2e8f0'); // Slate 200
+             }
+          }
+       }
+    }
+
+    function showTooltip(evt, h) {
+       const cur = allDays[currentDayIndex];
+       const val = localStorage.getItem(`note_h_${cur.id}_${h}`);
+       if (val && val.trim() !== '') {
+          const tooltip = document.getElementById('clockTooltip');
+          tooltip.innerText = `ساعت ${h}:00 تا ${h+1}:00\n${val}`;
+          tooltip.style.left = (evt.clientX + 15) + 'px';
+          tooltip.style.top = (evt.clientY + 15) + 'px';
+          tooltip.classList.remove('hidden');
+       }
+    }
+    
+    function hideTooltip() {
+       document.getElementById('clockTooltip').classList.add('hidden');
+    }
+
+    // 11. بکاپ و بازیابی
     function exportData() {
       const dump = {};
       for (let i = 0; i < localStorage.length; i++) {
         const k = localStorage.key(i);
-        if (k.startsWith('note_')) dump[k] = localStorage.getItem(k);
+        if (k.startsWith('note_') || k.startsWith('chk_')) dump[k] = localStorage.getItem(k);
       }
       const blob = new Blob([JSON.stringify(dump, null, 2)], { type: 'application/json' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = `phd_study_backup_${new Date().toISOString().slice(0, 10)}.json`;
+      a.download = `phd_dashboard_backup_${new Date().toISOString().slice(0, 10)}.json`;
       a.click();
     }
 
@@ -254,6 +447,7 @@
       reader.readAsText(file);
     }
 
+    // شروع برنامه
     initCalendar();
   </script>
 </body>
