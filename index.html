@@ -9,257 +9,186 @@
   <style>
     body { font-family: 'Vazirmatn', sans-serif; }
     textarea { resize: vertical; }
-    /* افکت‌های مربوط به ساعت دایره‌ای */
-    .clock-slice { transition: fill 0.3s ease; }
-    .clock-slice:hover { opacity: 0.8; }
+    .clock-slice { transition: all 0.3s ease; }
+    .clock-slice:hover { opacity: 0.8; stroke-width: 1.5; stroke: #333; }
+    .clock-text { font-size: 3.5px; fill: #1e293b; pointer-events: none; font-weight: bold; }
+    .tab-btn.active { border-bottom-width: 4px; border-color: #f59e0b; color: #f59e0b; }
   </style>
 </head>
 <body class="bg-slate-100 text-slate-800">
 
-  <!-- Tooltip برای ساعت -->
   <div id="clockTooltip" class="fixed hidden bg-slate-900 text-white text-xs p-2 rounded-lg shadow-xl z-50 pointer-events-none max-w-xs whitespace-pre-wrap leading-relaxed"></div>
 
   <header class="bg-slate-900 text-white p-5 border-b border-slate-700 shadow-md">
     <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
       <div>
         <h1 class="text-2xl font-bold text-amber-400">داشبورد دکتری حقوق تجارت و سرمایه‌گذاری بین‌المللی</h1>
-        <p class="text-sm text-slate-300 mt-1">بازه هدف: شنبه ۱۴ شهریور ۱۴۰۵ تا جمعه ۱۶ بهمن ۱۴۰۵ (روز آزمون)</p>
+        <p class="text-sm text-slate-300 mt-1">بازه هدف: ۱۴ شهریور تا ۱۶ بهمن ۱۴۰۵ | موفقیت قطعی</p>
       </div>
       <div class="flex gap-2">
-        <button onclick="exportData()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-sm font-medium transition shadow-lg">پشتیبان‌گیری (JSON)</button>
-        <label class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium cursor-pointer transition shadow-lg">
-          بازیابی فایل
-          <input type="file" onchange="importData(event)" class="hidden">
-        </label>
+        <button onclick="exportData()" class="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-sm font-medium transition shadow-lg">پشتیبان‌گیری</button>
+        <label class="px-3 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg text-sm font-medium cursor-pointer transition shadow-lg">بازیابی<input type="file" onchange="importData(event)" class="hidden"></label>
       </div>
+    </div>
+    <div class="max-w-6xl mx-auto mt-4 flex gap-6 border-b border-slate-700">
+      <button onclick="switchTab('planning')" id="btn-planning" class="tab-btn active pb-2 text-lg font-bold transition hover:text-amber-300">برنامه‌ریزی</button>
+      <button onclick="switchTab('resources')" id="btn-resources" class="tab-btn pb-2 text-lg font-bold transition hover:text-amber-300">منابع مطالعاتی و پایش</button>
     </div>
   </header>
 
-  <main class="max-w-6xl mx-auto p-4 sm:p-6 space-y-6">
-    <!-- انتخابگر زمان -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-      <div>
-        <label class="block text-xs font-semibold text-slate-500 mb-1">انتخاب ماه:</label>
-        <select id="monthSelect" onchange="changeMonth()" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg font-medium focus:ring-2 focus:ring-amber-400 outline-none"></select>
+  <main class="max-w-6xl mx-auto p-4 sm:p-6">
+    
+    <!-- شیت برنامه‌ریزی -->
+    <div id="tab-planning" class="space-y-6 block">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+        <div><label class="block text-xs font-semibold text-slate-500 mb-1">انتخاب ماه:</label><select id="monthSelect" onchange="changeMonth()" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg outline-none"></select></div>
+        <div><label class="block text-xs font-semibold text-slate-500 mb-1">انتخاب هفته:</label><select id="weekSelect" onchange="changeWeek()" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg outline-none"></select></div>
+        <div><label class="block text-xs font-semibold text-slate-500 mb-1">انتخاب روز:</label><select id="daySelect" onchange="changeDay()" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg outline-none"></select></div>
       </div>
-      <div>
-        <label class="block text-xs font-semibold text-slate-500 mb-1">انتخاب هفته:</label>
-        <select id="weekSelect" onchange="changeWeek()" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg font-medium focus:ring-2 focus:ring-amber-400 outline-none"></select>
-      </div>
-      <div>
-        <label class="block text-xs font-semibold text-slate-500 mb-1">انتخاب روز:</label>
-        <select id="daySelect" onchange="changeDay()" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg font-medium focus:ring-2 focus:ring-amber-400 outline-none"></select>
-      </div>
+
+      <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="bg-slate-800 text-white px-5 py-3"><h2 id="monthTitle" class="font-bold">اهداف ماهانه</h2></div>
+        <div class="p-5"><textarea id="monthText" rows="4" oninput="saveContent('month')" placeholder="برنامه‌ریزی ماهانه..." class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg outline-none"></textarea></div>
+      </section>
+
+      <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="bg-indigo-900 text-white px-5 py-3"><h2 id="weekTitle" class="font-bold">برنامه و چک‌لیست هفتگی</h2></div>
+        <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div><textarea id="weekText" rows="5" oninput="saveContent('week')" placeholder="اهداف هفتگی..." class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg outline-none"></textarea></div>
+          <div>
+            <div class="flex justify-between items-center mb-2"><label class="text-sm font-bold text-slate-700">چک‌لیست:</label><button onclick="addChecklist('week')" class="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded">+ افزودن</button></div>
+            <div id="weekChecklist" class="space-y-1"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="bg-amber-600 text-white px-5 py-3"><h2 id="dayTitle" class="font-bold">برنامه روزانه و زمان‌بندی</h2></div>
+        <div class="p-5 space-y-8">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div><textarea id="daySummaryText" rows="3" oninput="saveContent('daySummary')" placeholder="اولویت‌های اصلی این روز..." class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg outline-none"></textarea></div>
+            <div>
+              <div class="flex justify-between items-center mb-2"><label class="text-sm font-bold text-slate-700">چک‌لیست روزانه:</label><button onclick="addChecklist('day')" class="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded">+ افزودن</button></div>
+              <div id="dayChecklist" class="space-y-1"></div>
+            </div>
+          </div>
+
+          <hr class="border-slate-200">
+          <div>
+            <h3 class="text-sm font-bold text-slate-700 mb-4 text-center">وضعیت تخصیص زمان (بصری)</h3>
+            <div class="flex justify-center gap-10 md:gap-20">
+              <div class="flex flex-col items-center"><span class="text-xs font-bold text-slate-500 mb-2">بامداد تا ظهر (۰۰ تا ۱۲)</span><div id="clockAM" class="relative"></div></div>
+              <div class="flex flex-col items-center"><span class="text-xs font-bold text-slate-500 mb-2">ظهر تا نیمه‌شب (۱۲ تا ۲۴)</span><div id="clockPM" class="relative"></div></div>
+            </div>
+          </div>
+
+          <hr class="border-slate-200">
+          <div>
+            <h3 class="text-sm font-bold text-slate-700 mb-4">جزئیات برنامه‌ریزی ۲۴ ساعته:</h3>
+            <div id="hourlyGrid" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+          </div>
+        </div>
+      </section>
     </div>
 
-    <!-- بخش ماه -->
-    <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-      <div class="bg-slate-800 text-white px-5 py-3 flex justify-between items-center">
-        <h2 id="monthTitle" class="font-bold">اهداف ماهانه</h2>
-      </div>
-      <div class="p-5">
-        <textarea id="monthText" rows="6" oninput="saveContent('month')" placeholder="اهداف، فصول مورد مطالعه و برنامه‌ریزی ماهانه (۲۰ خط)..." class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-400 outline-none leading-relaxed"></textarea>
-      </div>
-    </section>
-
-    <!-- بخش هفته -->
-    <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-      <div class="bg-indigo-900 text-white px-5 py-3 flex justify-between items-center">
-        <h2 id="weekTitle" class="font-bold">برنامه و چک‌لیست هفتگی</h2>
-      </div>
-      <div class="p-5 grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label class="block text-sm font-bold text-slate-700 mb-2">اهداف کلی هفته (۱۰ خط):</label>
-          <textarea id="weekText" rows="6" oninput="saveContent('week')" placeholder="اهداف هفتگی، آزمون‌های آزمایشی و تست‌زنی..." class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-400 outline-none leading-relaxed"></textarea>
+    <!-- شیت منابع مطالعاتی -->
+    <div id="tab-resources" class="space-y-8 hidden">
+      <!-- کتب حقوقی -->
+      <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="bg-blue-800 text-white px-5 py-3 flex justify-between items-center">
+          <h2 class="font-bold">کتب حقوقی تخصصی</h2>
+          <span id="prog-legal" class="text-xs bg-blue-900 px-3 py-1 rounded border border-blue-600">پایش: 0/0 (0%)</span>
         </div>
-        <div>
-          <div class="flex justify-between items-center mb-2">
-            <label class="block text-sm font-bold text-slate-700">چک‌لیست تسک‌های هفتگی:</label>
-            <button onclick="addChecklist('week')" class="text-xs bg-indigo-100 text-indigo-700 px-2 py-1 rounded hover:bg-indigo-200">+ افزودن تسک</button>
-          </div>
-          <div id="weekChecklist" class="space-y-1"></div>
+        <div class="p-5 space-y-4" id="resLegalList"></div>
+        <div class="p-4 bg-slate-50 border-t border-slate-200"><button onclick="addResource('legal')" class="bg-blue-100 text-blue-700 px-4 py-2 rounded text-sm font-bold hover:bg-blue-200">+ افزودن کتاب جدید</button></div>
+      </section>
+
+      <!-- مقالات -->
+      <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="bg-purple-800 text-white px-5 py-3 flex justify-between items-center">
+          <h2 class="font-bold">مقالات علمی</h2>
+          <span id="prog-article" class="text-xs bg-purple-900 px-3 py-1 rounded border border-purple-600">پایش: 0/0 (0%)</span>
         </div>
-      </div>
-    </section>
+        <div class="p-5 space-y-3" id="resArticleList"></div>
+        <div class="p-4 bg-slate-50 border-t border-slate-200"><button onclick="addResourceSimple('article')" class="bg-purple-100 text-purple-700 px-4 py-2 rounded text-sm font-bold hover:bg-purple-200">+ افزودن مقاله جدید</button></div>
+      </section>
 
-    <!-- بخش روزانه و ۲۴ ساعت -->
-    <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-      <div class="bg-amber-600 text-white px-5 py-3 flex justify-between items-center">
-        <h2 id="dayTitle" class="font-bold">برنامه روزانه و زمان‌بندی</h2>
-      </div>
-      <div class="p-5 space-y-8">
-        
-        <!-- یادداشت کل روز و چک لیست روزانه -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label class="block text-sm font-bold text-slate-700 mb-2">اولویت‌های اصلی این روز (۳ خط):</label>
-            <textarea id="daySummaryText" rows="4" oninput="saveContent('daySummary')" placeholder="خلاصه بازدهی و اولویت‌های این روز..." class="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-amber-400 outline-none leading-relaxed"></textarea>
-          </div>
-          <div>
-            <div class="flex justify-between items-center mb-2">
-              <label class="block text-sm font-bold text-slate-700">چک‌لیست کارهای روزانه:</label>
-              <button onclick="addChecklist('day')" class="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded hover:bg-amber-200">+ افزودن تسک</button>
-            </div>
-            <div id="dayChecklist" class="space-y-1"></div>
-          </div>
+      <!-- سنوات -->
+      <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="bg-emerald-700 text-white px-5 py-3 flex justify-between items-center">
+          <h2 class="font-bold">سوالات سنوات گذشته کنکور</h2>
+          <span id="prog-exam" class="text-xs bg-emerald-800 px-3 py-1 rounded border border-emerald-500">پایش: 0/0 (0%)</span>
         </div>
+        <div class="p-5 space-y-3" id="resExamList"></div>
+        <div class="p-4 bg-slate-50 border-t border-slate-200"><button onclick="addResourceSimple('exam')" class="bg-emerald-100 text-emerald-700 px-4 py-2 rounded text-sm font-bold hover:bg-emerald-200">+ افزودن عنوان آزمون</button></div>
+      </section>
 
-        <hr class="border-slate-200">
-
-        <!-- ساعت‌های بصری -->
-        <div>
-          <h3 class="text-sm font-bold text-slate-700 mb-4 text-center">وضعیت تخصیص زمان در طول ۲۴ ساعت (برای مشاهده برنامه، موس را روی بخش‌های رنگی ببرید)</h3>
-          <div class="flex justify-center gap-10 md:gap-20">
-            <div class="flex flex-col items-center">
-              <span class="text-xs font-bold text-slate-500 mb-2">بامداد تا ظهر (۰۰:۰۰ تا ۱۲:۰۰)</span>
-              <div id="clockAM" class="relative"></div>
-            </div>
-            <div class="flex flex-col items-center">
-              <span class="text-xs font-bold text-slate-500 mb-2">ظهر تا نیمه‌شب (۱۲:۰۰ تا ۲۴:۰۰)</span>
-              <div id="clockPM" class="relative"></div>
-            </div>
-          </div>
+      <!-- زبان -->
+      <section class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="bg-rose-700 text-white px-5 py-3 flex justify-between items-center">
+          <h2 class="font-bold">زبان انگلیسی</h2>
+          <span id="prog-english" class="text-xs bg-rose-800 px-3 py-1 rounded border border-rose-500">پایش: 0/0 (0%)</span>
         </div>
+        <div class="p-5 space-y-4" id="resEnglishList"></div>
+        <div class="p-4 bg-slate-50 border-t border-slate-200"><button onclick="addResource('english')" class="bg-rose-100 text-rose-700 px-4 py-2 rounded text-sm font-bold hover:bg-rose-200">+ افزودن منبع زبان</button></div>
+      </section>
+    </div>
 
-        <hr class="border-slate-200">
-
-        <!-- فیلدهای متنی 24 ساعته -->
-        <div>
-          <h3 class="text-sm font-bold text-slate-700 mb-4">جزئیات برنامه‌ریزی ساعتی:</h3>
-          <div id="hourlyGrid" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
-        </div>
-
-      </div>
-    </section>
   </main>
 
   <script>
-    // 1. تنظیم تقویم: شروع از ۱۴ شهریور
+    // === هسته تقویم و برنامه‌ریزی ===
     const months = [
-      { id: 'm1', name: 'شهریور', days: 18, offset: 14 }, // 14 to 31
+      { id: 'm1', name: 'شهریور', days: 18, offset: 14 },
       { id: 'm2', name: 'مهر', days: 30, offset: 1 },
       { id: 'm3', name: 'آبان', days: 30, offset: 1 },
       { id: 'm4', name: 'آذر', days: 30, offset: 1 },
       { id: 'm5', name: 'دی', days: 30, offset: 1 },
-      { id: 'm6', name: 'بهمن', days: 16, offset: 1 } // up to 16th
+      { id: 'm6', name: 'بهمن', days: 16, offset: 1 }
     ];
-
     const weekDays = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنج‌شنبه', 'جمعه'];
+    const colors = { none: '#e2e8f0', legal: '#3b82f6', work: '#a855f7', family: '#10b981', misc: '#94a3b8' };
+    const textColors = { none: '#1e293b', legal: '#ffffff', work: '#ffffff', family: '#ffffff', misc: '#ffffff' };
     
-    let allDays = [];
-    let weeks = [];
-    let currentDayIndex = 0;
+    let allDays = [], weeks = [], currentDayIndex = 0;
+    let activeWeeklyChecklist = [], activeDailyChecklist = [];
 
-    let activeWeeklyChecklist = [];
-    let activeDailyChecklist = [];
+    function switchTab(tab) {
+      document.getElementById('tab-planning').classList.toggle('hidden', tab !== 'planning');
+      document.getElementById('tab-resources').classList.toggle('hidden', tab !== 'resources');
+      document.getElementById('btn-planning').classList.toggle('active', tab === 'planning');
+      document.getElementById('btn-resources').classList.toggle('active', tab === 'resources');
+      if(tab === 'resources') renderAllResources();
+    }
 
-    // 2. مقدار دهی تقویم و ساختار هفته‌ها
     function initCalendar() {
-      let globalDayId = 1;
-      let dayNameCursor = 0; 
-
+      let globalDayId = 1, dayNameCursor = 0; 
       months.forEach((m) => {
         for (let d = 0; d < m.days; d++) {
           const dayNum = m.offset + d;
-          const dayName = weekDays[dayNameCursor % 7];
-          const weekNum = Math.floor((globalDayId - 1) / 7) + 1;
-
           allDays.push({
-            id: `d_${m.id}_${dayNum}`,
-            monthId: m.id,
-            monthName: m.name,
-            dayNum: dayNum,
-            dayName: dayName,
-            weekId: `w_${weekNum}`,
-            title: `${dayName} ${dayNum} ${m.name}`
+            id: `d_${m.id}_${dayNum}`, monthId: m.id, monthName: m.name, dayNum: dayNum,
+            dayName: weekDays[dayNameCursor % 7], weekId: `w_${Math.floor((globalDayId - 1) / 7) + 1}`,
+            title: `${weekDays[dayNameCursor % 7]} ${dayNum} ${m.name}`
           });
-
-          dayNameCursor++;
-          globalDayId++;
+          dayNameCursor++; globalDayId++;
         }
       });
-
-      // استخراج داده‌های هفته برای نمایش بازه تاریخی (مثلا 14 تا 20)
       const totalWeeks = Math.ceil(allDays.length / 7);
       for (let i = 0; i < totalWeeks; i++) {
-        const weekDaysArr = allDays.slice(i * 7, (i + 1) * 7);
-        const first = weekDaysArr[0];
-        const last = weekDaysArr[weekDaysArr.length - 1];
-        weeks.push({
-          id: `w_${i+1}`,
-          label: `هفته ${i+1} (${first.dayNum} ${first.monthName} تا ${last.dayNum} ${last.monthName})`
-        });
+        const wDays = allDays.slice(i * 7, (i + 1) * 7);
+        weeks.push({ id: `w_${i+1}`, label: `هفته ${i+1} (${wDays[0].dayNum} ${wDays[0].monthName} تا ${wDays[wDays.length-1].dayNum} ${wDays[wDays.length-1].monthName})` });
       }
-
-      initClocks();
-      renderSelectors();
-      renderHourlyInputs();
-      loadActiveViews();
+      initClocks(); renderSelectors(); renderHourlyInputs(); loadActiveViews(); initResources();
     }
 
-    // 3. رندر کردن Select ها
     function renderSelectors() {
       document.getElementById('monthSelect').innerHTML = months.map(m => `<option value="${m.id}">${m.name} ۱۴۰۵</option>`).join('');
       document.getElementById('weekSelect').innerHTML = weeks.map(w => `<option value="${w.id}">${w.label}</option>`).join('');
-      updateDaySelect();
+      document.getElementById('daySelect').innerHTML = allDays.map((d, idx) => `<option value="${idx}">${d.title}</option>`).join('');
+      document.getElementById('daySelect').value = currentDayIndex;
     }
 
-    function updateDaySelect() {
-      const dSel = document.getElementById('daySelect');
-      dSel.innerHTML = allDays.map((d, idx) => `<option value="${idx}">${d.title}</option>`).join('');
-      dSel.value = currentDayIndex;
-    }
-
-    // 4. رسم ساعت‌های SVG
-    function initClocks() {
-      document.getElementById('clockAM').innerHTML = createClockSVG(0, 'am');
-      document.getElementById('clockPM').innerHTML = createClockSVG(12, 'pm');
-    }
-
-    function createClockSVG(startHour, type) {
-      let svg = `<svg viewBox="0 0 100 100" class="w-32 h-32 md:w-40 md:h-40 transform -rotate-90 rounded-full bg-slate-100 shadow-inner">`;
-      for(let i=0; i<12; i++) {
-         const h = startHour + i;
-         const a1 = (i * 30) * Math.PI / 180;
-         const a2 = ((i+1) * 30) * Math.PI / 180;
-         const x1 = 50 + 50 * Math.cos(a1);
-         const y1 = 50 + 50 * Math.sin(a1);
-         const x2 = 50 + 50 * Math.cos(a2);
-         const y2 = 50 + 50 * Math.sin(a2);
-         svg += `<path id="slice_${h}" d="M50,50 L${x1},${y1} A50,50 0 0,1 ${x2},${y2} Z" fill="#e2e8f0" stroke="#fff" stroke-width="0.5" class="clock-slice cursor-pointer" onmousemove="showTooltip(event, ${h})" onmouseleave="hideTooltip()" onclick="document.getElementById('h_${h}').focus()"/>`;
-      }
-      // مرکز ساعت
-      svg += `<circle cx="50" cy="50" r="10" fill="#fff" shadow="sm"/>`;
-      svg += `</svg>`;
-      
-      // افزودن نشانگرهای 12، 3، 6، 9 (اختیاری برای زیبایی)
-      const labels = type === 'am' ? ['۰', '۳', '۶', '۹'] : ['۱۲', '۱۵', '۱۸', '۲۱'];
-      svg += `<div class="absolute inset-0 pointer-events-none flex items-center justify-center">
-        <span class="absolute top-1 text-[10px] text-slate-400 font-bold">${labels[0]}</span>
-        <span class="absolute right-1 text-[10px] text-slate-400 font-bold">${labels[1]}</span>
-        <span class="absolute bottom-1 text-[10px] text-slate-400 font-bold">${labels[2]}</span>
-        <span class="absolute left-1 text-[10px] text-slate-400 font-bold">${labels[3]}</span>
-      </div>`;
-      return svg;
-    }
-
-    // 5. ساخت فیلدهای 24 ساعتی
-    function renderHourlyInputs() {
-      const grid = document.getElementById('hourlyGrid');
-      let html = '';
-      for (let h = 0; h < 24; h++) {
-        const timeLabel = `${String(h).padStart(2, '0')}:00 تا ${String((h + 1) % 24).padStart(2, '0')}:00`;
-        html += `
-          <div class="flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-200">
-            <span class="text-xs font-mono font-bold text-slate-500 w-24">${timeLabel}</span>
-            <input type="text" id="h_${h}" oninput="saveHour(${h})" placeholder="برنامه این ساعت..." class="w-full text-sm p-1.5 bg-white border border-slate-300 rounded outline-none focus:border-amber-500 transition-colors">
-          </div>
-        `;
-      }
-      grid.innerHTML = html;
-    }
-
-    // 6. تغییر بازه‌های زمانی
     function changeDay() {
       currentDayIndex = parseInt(document.getElementById('daySelect').value);
       const cur = allDays[currentDayIndex];
@@ -267,187 +196,241 @@
       document.getElementById('weekSelect').value = cur.weekId;
       loadActiveViews();
     }
-
     function changeMonth() {
-      const selectedMonth = document.getElementById('monthSelect').value;
-      const targetIdx = allDays.findIndex(d => d.monthId === selectedMonth);
-      if (targetIdx !== -1) {
-        currentDayIndex = targetIdx;
-        document.getElementById('daySelect').value = currentDayIndex;
-        document.getElementById('weekSelect').value = allDays[targetIdx].weekId;
-        loadActiveViews();
-      }
+      const idx = allDays.findIndex(d => d.monthId === document.getElementById('monthSelect').value);
+      if (idx !== -1) { document.getElementById('daySelect').value = idx; changeDay(); }
     }
-
     function changeWeek() {
-      const selectedWeek = document.getElementById('weekSelect').value;
-      const targetIdx = allDays.findIndex(d => d.weekId === selectedWeek);
-      if (targetIdx !== -1) {
-        currentDayIndex = targetIdx;
-        document.getElementById('daySelect').value = currentDayIndex;
-        document.getElementById('monthSelect').value = allDays[targetIdx].monthId;
-        loadActiveViews();
-      }
+      const idx = allDays.findIndex(d => d.weekId === document.getElementById('weekSelect').value);
+      if (idx !== -1) { document.getElementById('daySelect').value = idx; changeDay(); }
     }
 
-    // 7. بارگذاری اطلاعات در صفحه
+    function renderHourlyInputs() {
+      let html = '';
+      for (let h = 0; h < 24; h++) {
+        html += `
+          <div class="flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-200">
+            <span class="text-xs font-mono font-bold text-slate-500 w-20">${String(h).padStart(2,'0')}:00</span>
+            <select id="c_${h}" onchange="saveHour(${h})" class="text-xs p-1.5 bg-white border border-slate-300 rounded outline-none cursor-pointer">
+              <option value="none">عادی</option><option value="legal">حقوقی</option><option value="work">کاری</option><option value="family">خانواده</option><option value="misc">متفرقه</option>
+            </select>
+            <input type="text" id="h_${h}" oninput="saveHour(${h})" placeholder="..." class="w-full text-xs p-1.5 bg-white border border-slate-300 rounded outline-none">
+          </div>`;
+      }
+      document.getElementById('hourlyGrid').innerHTML = html;
+    }
+
+    function initClocks() {
+      document.getElementById('clockAM').innerHTML = createClockSVG(0);
+      document.getElementById('clockPM').innerHTML = createClockSVG(12);
+    }
+    function createClockSVG(startHour) {
+      let svg = `<svg viewBox="0 0 100 100" class="w-40 h-40 md:w-56 md:h-56 transform -rotate-90 rounded-full bg-slate-100 shadow-inner">`;
+      for(let i=0; i<12; i++) {
+         const h = startHour + i;
+         const a1 = (i * 30) * Math.PI / 180, a2 = ((i+1) * 30) * Math.PI / 180;
+         const x1 = 50 + 50 * Math.cos(a1), y1 = 50 + 50 * Math.sin(a1);
+         const x2 = 50 + 50 * Math.cos(a2), y2 = 50 + 50 * Math.sin(a2);
+         svg += `<path id="slice_${h}" d="M50,50 L${x1},${y1} A50,50 0 0,1 ${x2},${y2} Z" fill="${colors.none}" stroke="#fff" stroke-width="0.5" class="clock-slice cursor-pointer" onmousemove="showTooltip(event, ${h})" onmouseleave="hideTooltip()" onclick="document.getElementById('h_${h}').focus()"/>`;
+         
+         const midA = (i * 30 + 15) * Math.PI / 180;
+         const tx = 50 + 35 * Math.cos(midA), ty = 50 + 35 * Math.sin(midA);
+         const rot = (i * 30 + 15) + (i > 2 && i < 9 ? 180 : 0);
+         svg += `<text id="t_${h}" x="${tx}" y="${ty}" transform="rotate(${rot} ${tx} ${ty})" text-anchor="middle" dominant-baseline="central" class="clock-text"></text>`;
+      }
+      svg += `<circle cx="50" cy="50" r="12" fill="#fff" shadow="sm"/><text x="50" y="52" text-anchor="middle" class="text-[8px] fill-slate-400 font-bold transform rotate-90 pointer-events-none">${startHour===0?'AM':'PM'}</text></svg>`;
+      return svg;
+    }
+
     function loadActiveViews() {
       const cur = allDays[currentDayIndex];
-      const currentWeek = weeks.find(w => w.id === cur.weekId);
-      
       document.getElementById('monthTitle').innerText = `برنامه ماهانه: ${cur.monthName}`;
-      document.getElementById('weekTitle').innerText = `برنامه ${currentWeek.label}`;
+      document.getElementById('weekTitle').innerText = `برنامه ${weeks.find(w => w.id === cur.weekId).label}`;
       document.getElementById('dayTitle').innerText = `برنامه روز: ${cur.title}`;
-
-      document.getElementById('monthText').value = localStorage.getItem(`note_m_${cur.monthId}`) || '';
-      document.getElementById('weekText').value = localStorage.getItem(`note_w_${cur.weekId}`) || '';
-      document.getElementById('daySummaryText').value = localStorage.getItem(`note_d_sum_${cur.id}`) || '';
-
+      document.getElementById('monthText').value = localStorage.getItem(`n_m_${cur.monthId}`) || '';
+      document.getElementById('weekText').value = localStorage.getItem(`n_w_${cur.weekId}`) || '';
+      document.getElementById('daySummaryText').value = localStorage.getItem(`n_d_s_${cur.id}`) || '';
       for (let h = 0; h < 24; h++) {
-        document.getElementById(`h_${h}`).value = localStorage.getItem(`note_h_${cur.id}_${h}`) || '';
+        document.getElementById(`h_${h}`).value = localStorage.getItem(`n_h_${cur.id}_${h}`) || '';
+        document.getElementById(`c_${h}`).value = localStorage.getItem(`c_h_${cur.id}_${h}`) || 'none';
       }
+      activeWeeklyChecklist = JSON.parse(localStorage.getItem(`c_w_${cur.weekId}`)) || Array(5).fill({text:'', checked:false});
+      activeDailyChecklist = JSON.parse(localStorage.getItem(`c_d_${cur.id}`)) || Array(5).fill({text:'', checked:false});
+      renderChecklists(); syncClocks();
+    }
 
-      // بارگذاری چک‌لیست‌ها (پیش‌فرض ۵ آیتم خالی)
-      const defaultChecklist = Array.from({length: 5}, () => ({text:'', checked:false}));
-      activeWeeklyChecklist = JSON.parse(localStorage.getItem(`chk_w_${cur.weekId}`)) || JSON.parse(JSON.stringify(defaultChecklist));
-      activeDailyChecklist = JSON.parse(localStorage.getItem(`chk_d_${cur.id}`)) || JSON.parse(JSON.stringify(defaultChecklist));
-      
-      renderChecklists();
+    function saveContent(type) {
+      const cur = allDays[currentDayIndex];
+      if (type === 'month') localStorage.setItem(`n_m_${cur.monthId}`, document.getElementById('monthText').value);
+      if (type === 'week') localStorage.setItem(`n_w_${cur.weekId}`, document.getElementById('weekText').value);
+      if (type === 'daySummary') localStorage.setItem(`n_d_s_${cur.id}`, document.getElementById('daySummaryText').value);
+    }
+    function saveHour(h) {
+      const cur = allDays[currentDayIndex];
+      localStorage.setItem(`n_h_${cur.id}_${h}`, document.getElementById(`h_${h}`).value);
+      localStorage.setItem(`c_h_${cur.id}_${h}`, document.getElementById(`c_${h}`).value);
       syncClocks();
     }
 
-    // 8. ذخیره سازی متون ساده و ساعت‌ها
-    function saveContent(type) {
-      const cur = allDays[currentDayIndex];
-      if (type === 'month') localStorage.setItem(`note_m_${cur.monthId}`, document.getElementById('monthText').value);
-      if (type === 'week') localStorage.setItem(`note_w_${cur.weekId}`, document.getElementById('weekText').value);
-      if (type === 'daySummary') localStorage.setItem(`note_d_sum_${cur.id}`, document.getElementById('daySummaryText').value);
-    }
-
-    function saveHour(h) {
-      const cur = allDays[currentDayIndex];
-      localStorage.setItem(`note_h_${cur.id}_${h}`, document.getElementById(`h_${h}`).value);
-      syncClocks(); // رنگ آمیزی آنلاین ساعت دایره‌ای
-    }
-
-    // 9. منطق چک‌لیست‌ها
     function renderChecklists() {
-      const wContainer = document.getElementById('weekChecklist');
-      wContainer.innerHTML = activeWeeklyChecklist.map((item, i) => createChecklistHtml('week', i, item)).join('');
-      
-      const dContainer = document.getElementById('dayChecklist');
-      dContainer.innerHTML = activeDailyChecklist.map((item, i) => createChecklistHtml('day', i, item)).join('');
+      document.getElementById('weekChecklist').innerHTML = activeWeeklyChecklist.map((item, i) => createChk('week', i, item)).join('');
+      document.getElementById('dayChecklist').innerHTML = activeDailyChecklist.map((item, i) => createChk('day', i, item)).join('');
     }
-
-    function createChecklistHtml(type, index, item) {
-       const lineThrough = item.checked ? 'line-through text-slate-400' : 'text-slate-700';
-       return `<div class="flex items-center gap-2 mb-1.5">
-         <input type="checkbox" id="chk_${type}_cb_${index}" ${item.checked?'checked':''} onchange="updateChecklist('${type}', ${index})" class="w-4 h-4 text-amber-500 rounded border-slate-300 focus:ring-amber-500 cursor-pointer">
-         <input type="text" id="chk_${type}_txt_${index}" value="${item.text}" oninput="updateChecklist('${type}', ${index})" placeholder="عنوان وظیفه..." class="w-full text-sm p-1.5 bg-white border border-slate-200 rounded outline-none focus:border-amber-400 ${lineThrough}">
-         <button onclick="removeChecklist('${type}', ${index})" class="text-red-400 hover:text-red-600 font-bold px-2" title="حذف">&times;</button>
-       </div>`;
+    function createChk(type, i, item) {
+       return `<div class="flex items-center gap-2 mb-1"><input type="checkbox" id="cb_${type}_${i}" ${item.checked?'checked':''} onchange="updChk('${type}', ${i})" class="cursor-pointer"><input type="text" id="txt_${type}_${i}" value="${item.text}" oninput="updChk('${type}', ${i})" placeholder="..." class="w-full text-sm p-1 border rounded outline-none ${item.checked?'line-through text-slate-400':''}"><button onclick="rmChk('${type}', ${i})" class="text-red-400 font-bold">&times;</button></div>`;
     }
-
-    function updateChecklist(type, index) {
-       const cur = allDays[currentDayIndex];
-       const list = type === 'week' ? activeWeeklyChecklist : activeDailyChecklist;
-       
-       list[index].checked = document.getElementById(`chk_${type}_cb_${index}`).checked;
-       list[index].text = document.getElementById(`chk_${type}_txt_${index}`).value;
-       
-       const key = type === 'week' ? `chk_w_${cur.weekId}` : `chk_d_${cur.id}`;
-       localStorage.setItem(key, JSON.stringify(list));
-
-       const txtInput = document.getElementById(`chk_${type}_txt_${index}`);
-       if (list[index].checked) {
-           txtInput.classList.add('line-through', 'text-slate-400');
-           txtInput.classList.remove('text-slate-700');
-       } else {
-           txtInput.classList.remove('line-through', 'text-slate-400');
-           txtInput.classList.add('text-slate-700');
-       }
-    }
-
-    function addChecklist(type) {
-       const list = type === 'week' ? activeWeeklyChecklist : activeDailyChecklist;
-       list.push({text:'', checked:false});
+    function updChk(t, i) {
+       const list = t === 'week' ? activeWeeklyChecklist : activeDailyChecklist;
+       list[i] = { checked: document.getElementById(`cb_${t}_${i}`).checked, text: document.getElementById(`txt_${t}_${i}`).value };
+       localStorage.setItem(t === 'week' ? `c_w_${allDays[currentDayIndex].weekId}` : `c_d_${allDays[currentDayIndex].id}`, JSON.stringify(list));
        renderChecklists();
-       updateChecklist(type, list.length - 1);
     }
-
-    function removeChecklist(type, index) {
-       const list = type === 'week' ? activeWeeklyChecklist : activeDailyChecklist;
-       list.splice(index, 1);
+    function addChk(t) { (t === 'week' ? activeWeeklyChecklist : activeDailyChecklist).push({text:'', checked:false}); renderChecklists(); }
+    window.addChecklist = addChk;
+    function rmChk(t, i) {
+       const list = t === 'week' ? activeWeeklyChecklist : activeDailyChecklist; list.splice(i, 1);
+       localStorage.setItem(t === 'week' ? `c_w_${allDays[currentDayIndex].weekId}` : `c_d_${allDays[currentDayIndex].id}`, JSON.stringify(list));
        renderChecklists();
-       const cur = allDays[currentDayIndex];
-       const key = type === 'week' ? `chk_w_${cur.weekId}` : `chk_d_${cur.id}`;
-       localStorage.setItem(key, JSON.stringify(list));
     }
 
-    // 10. اتصال ساعت‌های دایره‌ای به فیلدها و Tooltip
     function syncClocks() {
        const cur = allDays[currentDayIndex];
        for(let h=0; h<24; h++) {
-          const slice = document.getElementById(`slice_${h}`);
-          const val = localStorage.getItem(`note_h_${cur.id}_${h}`);
-          if (slice) {
-             if (val && val.trim() !== '') {
-                slice.setAttribute('fill', '#f59e0b'); // Amber 500
-             } else {
-                slice.setAttribute('fill', '#e2e8f0'); // Slate 200
-             }
-          }
+          const val = localStorage.getItem(`n_h_${cur.id}_${h}`) || '';
+          const col = localStorage.getItem(`c_h_${cur.id}_${h}`) || 'none';
+          document.getElementById(`slice_${h}`).setAttribute('fill', val ? (col==='none'? '#f59e0b' : colors[col]) : colors.none);
+          const txtEl = document.getElementById(`t_${h}`);
+          let shortTxt = val.substring(0, 10);
+          txtEl.textContent = shortTxt + (val.length > 10 ? '..' : '');
+          txtEl.setAttribute('fill', val ? (col==='none'? '#1e293b' : textColors[col]) : textColors.none);
        }
     }
-
     function showTooltip(evt, h) {
-       const cur = allDays[currentDayIndex];
-       const val = localStorage.getItem(`note_h_${cur.id}_${h}`);
-       if (val && val.trim() !== '') {
-          const tooltip = document.getElementById('clockTooltip');
-          tooltip.innerText = `ساعت ${h}:00 تا ${h+1}:00\n${val}`;
-          tooltip.style.left = (evt.clientX + 15) + 'px';
-          tooltip.style.top = (evt.clientY + 15) + 'px';
-          tooltip.classList.remove('hidden');
+       const val = localStorage.getItem(`n_h_${allDays[currentDayIndex].id}_${h}`);
+       if (val) {
+          const t = document.getElementById('clockTooltip');
+          t.innerText = `ساعت ${h}:00\n${val}`; t.style.left = (evt.clientX + 15) + 'px'; t.style.top = (evt.clientY + 15) + 'px';
+          t.classList.remove('hidden');
        }
     }
-    
-    function hideTooltip() {
-       document.getElementById('clockTooltip').classList.add('hidden');
+    function hideTooltip() { document.getElementById('clockTooltip').classList.add('hidden'); }
+
+    // === هسته منابع مطالعاتی ===
+    let resources = {
+      legal: [
+        {id:'1', title:'حقوق نفت و گاز دکتری شیروی', chaps:[]}, {id:'2', title:'حقوق تجارت بین الملل دکتر شیروی', chaps:[]},
+        {id:'3', title:'حقوق انرژی دکتر شیروی', chaps:[]}, {id:'4', title:'معاملات دولتی دکتر نجارزاده', chaps:[]},
+        {id:'5', title:'قانون مدنی در نظم حقوقی کنونی دکتر کاتوزیان', chaps:[]}, {id:'6', title:'شرح جامع قانون مدنی دکتر بیات', chaps:[]}
+      ],
+      article: [], exam: [], english: []
+    };
+
+    function initResources() {
+      const saved = localStorage.getItem('phd_resources');
+      if (saved) resources = JSON.parse(saved);
+      renderAllResources();
+    }
+    function saveRes() { localStorage.setItem('phd_resources', JSON.stringify(resources)); renderAllResources(); }
+
+    function renderAllResources() {
+      renderCategoryComplex('legal', 'resLegalList', 'فصل');
+      renderCategorySimple('article', 'resArticleList');
+      renderCategorySimple('exam', 'resExamList');
+      renderCategoryComplex('english', 'resEnglishList', 'مقرری (صفحه/درس)');
+      updateProgress();
     }
 
-    // 11. بکاپ و بازیابی
+    function renderCategoryComplex(cat, elId, childLbl) {
+      document.getElementById(elId).innerHTML = resources[cat].map((bk, bIdx) => `
+        <div class="border border-slate-200 rounded-lg p-3 bg-white">
+          <div class="flex justify-between items-center mb-2">
+            <input type="text" value="${bk.title}" onchange="updCat('${cat}',${bIdx},'title',this.value)" class="font-bold text-slate-800 bg-transparent outline-none w-full" placeholder="عنوان کتاب...">
+            <button onclick="rmCat('${cat}',${bIdx})" class="text-red-400 text-xs px-2 hover:text-red-600">حذف کتاب</button>
+          </div>
+          <div class="pl-2 pr-4 border-r-2 border-slate-200 space-y-2 mt-2">
+            ${bk.chaps.map((ch, cIdx) => `
+              <div class="flex flex-wrap md:flex-nowrap items-center gap-2 bg-slate-50 p-2 rounded">
+                <input type="text" value="${ch.title}" onchange="updChap('${cat}',${bIdx},${cIdx},'title',this.value)" class="text-sm bg-white border border-slate-200 rounded p-1 flex-grow outline-none" placeholder="عنوان ${childLbl}...">
+                <input type="text" value="${ch.desc||''}" onchange="updChap('${cat}',${bIdx},${cIdx},'desc',this.value)" class="text-xs bg-white border border-slate-200 rounded p-1 w-1/3 outline-none" placeholder="توضیحات...">
+                <div class="flex items-center gap-1 bg-amber-100 rounded px-2 py-1 border border-amber-200 min-w-max">
+                  <button onclick="tickChap('${cat}',${bIdx},${cIdx}, 1)" class="text-amber-700 font-bold px-1">+</button>
+                  <span class="text-xs font-bold text-amber-900 mx-1">مطالعه: ${ch.ticks||0}</span>
+                  <button onclick="tickChap('${cat}',${bIdx},${cIdx}, -1)" class="text-amber-700 font-bold px-1">-</button>
+                </div>
+                <button onclick="rmChap('${cat}',${bIdx},${cIdx})" class="text-red-400 font-bold ml-1">&times;</button>
+              </div>
+            `).join('')}
+            <button onclick="addChap('${cat}',${bIdx})" class="text-xs text-blue-600 font-bold mt-1">+ افزودن ${childLbl}</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function renderCategorySimple(cat, elId) {
+      document.getElementById(elId).innerHTML = resources[cat].map((item, i) => `
+        <div class="flex flex-wrap md:flex-nowrap items-center gap-2 border border-slate-200 rounded-lg p-2 bg-white">
+          <input type="text" value="${item.title}" onchange="updCat('${cat}',${i},'title',this.value)" class="font-bold text-sm bg-transparent outline-none flex-grow" placeholder="عنوان...">
+          <input type="text" value="${item.desc||''}" onchange="updCat('${cat}',${i},'desc',this.value)" class="text-xs bg-slate-50 border border-slate-200 rounded p-1.5 w-1/3 outline-none" placeholder="توضیحات...">
+          <div class="flex items-center gap-1 bg-amber-100 rounded px-2 py-1.5 border border-amber-200 min-w-max">
+            <button onclick="tickCat('${cat}',${i}, 1)" class="text-amber-700 font-bold px-1">+</button>
+            <span class="text-xs font-bold text-amber-900 mx-1">مطالعه: ${item.ticks||0}</span>
+            <button onclick="tickCat('${cat}',${i}, -1)" class="text-amber-700 font-bold px-1">-</button>
+          </div>
+          <button onclick="rmCat('${cat}',${i})" class="text-red-400 font-bold px-2">&times;</button>
+        </div>
+      `).join('');
+    }
+
+    // عملیات منابع
+    function addResource(cat) { resources[cat].push({id:Date.now(), title:'عنوان جدید', chaps:[]}); saveRes(); }
+    function addResourceSimple(cat) { resources[cat].push({id:Date.now(), title:'عنوان جدید', ticks:0, desc:''}); saveRes(); }
+    function rmCat(cat, i) { resources[cat].splice(i,1); saveRes(); }
+    function updCat(cat, i, field, val) { resources[cat][i][field] = val; saveRes(); }
+    function tickCat(cat, i, delta) { resources[cat][i].ticks = Math.max(0, (resources[cat][i].ticks||0) + delta); saveRes(); }
+    
+    function addChap(cat, bIdx) { resources[cat][bIdx].chaps.push({id:Date.now(), title:'', ticks:0, desc:''}); saveRes(); }
+    function rmChap(cat, bIdx, cIdx) { resources[cat][bIdx].chaps.splice(cIdx,1); saveRes(); }
+    function updChap(cat, bIdx, cIdx, field, val) { resources[cat][bIdx].chaps[cIdx][field] = val; saveRes(); }
+    function tickChap(cat, bIdx, cIdx, delta) { resources[cat][bIdx].chaps[cIdx].ticks = Math.max(0, (resources[cat][bIdx].chaps[cIdx].ticks||0) + delta); saveRes(); }
+
+    function updateProgress() {
+      const calcComplex = (cat) => {
+        let total = 0, done = 0;
+        resources[cat].forEach(b => { total += b.chaps.length; done += b.chaps.filter(c=>c.ticks>0).length; });
+        return {total, done};
+      };
+      const calcSimple = (cat) => {
+        let total = resources[cat].length, done = resources[cat].filter(i=>i.ticks>0).length;
+        return {total, done};
+      };
+      const writeProg = (id, stats) => {
+        const pct = stats.total===0 ? 0 : Math.round((stats.done/stats.total)*100);
+        document.getElementById(id).innerText = `پیشرفت: ${stats.done}/${stats.total} (${pct}%)`;
+      };
+      writeProg('prog-legal', calcComplex('legal')); writeProg('prog-english', calcComplex('english'));
+      writeProg('prog-article', calcSimple('article')); writeProg('prog-exam', calcSimple('exam'));
+    }
+
+    // بکاپ 
     function exportData() {
       const dump = {};
       for (let i = 0; i < localStorage.length; i++) {
         const k = localStorage.key(i);
-        if (k.startsWith('note_') || k.startsWith('chk_')) dump[k] = localStorage.getItem(k);
+        if (k.startsWith('n_') || k.startsWith('c_') || k === 'phd_resources') dump[k] = localStorage.getItem(k);
       }
-      const blob = new Blob([JSON.stringify(dump, null, 2)], { type: 'application/json' });
       const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `phd_dashboard_backup_${new Date().toISOString().slice(0, 10)}.json`;
-      a.click();
+      a.href = URL.createObjectURL(new Blob([JSON.stringify(dump)], { type: 'application/json' }));
+      a.download = `phd_dashboard_backup.json`; a.click();
     }
-
     function importData(e) {
-      const file = e.target.files[0];
-      if (!file) return;
       const reader = new FileReader();
       reader.onload = function(evt) {
-        try {
-          const data = JSON.parse(evt.target.result);
-          Object.keys(data).forEach(k => localStorage.setItem(k, data[k]));
-          loadActiveViews();
-          alert('اطلاعات با موفقیت بازیابی شد.');
-        } catch {
-          alert('فایل پشتیبان معتبر نیست.');
-        }
+        try { const data = JSON.parse(evt.target.result); Object.keys(data).forEach(k => localStorage.setItem(k, data[k])); location.reload(); } 
+        catch { alert('خطا در بازیابی'); }
       };
-      reader.readAsText(file);
+      if(e.target.files[0]) reader.readAsText(e.target.files[0]);
     }
-
-    // شروع برنامه
+    
     initCalendar();
   </script>
 </body>
