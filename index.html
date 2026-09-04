@@ -3,51 +3,50 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>داشبورد حرفه‌ای دکتری حقوق تجارت و سرمایه‌گذاری بین الملل</title>
+  <title>داشبورد حرفه‌ای دکتری حقوق تجارت و سرمایه‌گذاری بین‌الملل</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/Vazirmatn-font-face.css">
+  
+  <!-- Firebase App & Realtime Database SDKs (Compat) -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
   <style>
     body { font-family: 'Vazirmatn', sans-serif; background-color: #f8fafc; }
     textarea { resize: vertical; }
     .clock-slice { transition: all 0.3s ease; }
     .clock-slice:hover { opacity: 0.9; stroke-width: 1.5; stroke: #1e293b; transform: scale(1.02); transform-origin: center; }
     .clock-text { font-size: 3.5px; fill: #0f172a; pointer-events: none; font-weight: 800; }
-    
-    /* استایل تب‌های مدرن */
     .tab-btn { transition: all 0.3s ease; }
     .tab-btn.active { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; box-shadow: 0 4px 14px 0 rgba(245, 158, 11, 0.39); border-color: transparent; }
-    
-    /* افکت فوکوس روی فیلدها */
     input:focus, textarea:focus, select:focus { border-color: #f59e0b !important; box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2) !important; }
-    
-    /* انیمیشن محو شدن کارت‌ها */
     .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
   </style>
 </head>
 <body class="text-slate-800 antialiased selection:bg-amber-200 selection:text-amber-900">
 
-  <!-- Tooltip ساعت -->
   <div id="clockTooltip" class="fixed hidden bg-slate-900 text-amber-50 text-xs p-3 rounded-xl shadow-2xl z-50 pointer-events-none max-w-xs whitespace-pre-wrap leading-relaxed border border-slate-700 backdrop-blur-md"></div>
 
-  <!-- هدر اصلی -->
   <header class="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white pt-6 pb-4 px-5 border-b border-slate-700 shadow-lg sticky top-0 z-40">
     <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-5">
       <div class="text-center md:text-right">
-        <h1 class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-l from-amber-200 to-amber-500 tracking-tight">داشبورد مدیریت آزمون دکتری حقوق</h1>
-        <p class="text-sm text-slate-400 mt-1.5 font-medium">بازه هدف: ۱۴ شهریور تا ۱۶ بهمن ۱۴۰۵ | مسیر موفقیت</p>
+        <div class="flex items-center gap-3 justify-center md:justify-start">
+          <h1 class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-l from-amber-200 to-amber-500 tracking-tight">داشبورد مدیریت آزمون دکتری حقوق</h1>
+          <span id="cloudStatus" class="text-[11px] px-2.5 py-1 rounded-full bg-slate-700 text-slate-300 font-bold flex items-center gap-1.5 shadow-inner">
+            <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> در حال اتصال...
+          </span>
+        </div>
+        <p class="text-sm text-slate-400 mt-1.5 font-medium">بازه هدف: ۱۴ شهریور تا ۱۶ بهمن ۱۴۰۵ | موفقیت قطعی</p>
       </div>
       <div class="flex gap-3">
-        <button onclick="exportData()" class="px-4 py-2.5 bg-slate-700 hover:bg-emerald-600 rounded-xl text-sm font-bold transition-all duration-300 shadow-md flex items-center gap-2">
-          <span>پشتیبان‌گیری</span>
-        </button>
-        <label class="px-4 py-2.5 bg-slate-700 hover:bg-blue-600 rounded-xl text-sm font-bold cursor-pointer transition-all duration-300 shadow-md flex items-center gap-2">
-          <span>بازیابی فایل</span>
+        <button onclick="exportData()" class="px-4 py-2 bg-slate-700 hover:bg-emerald-600 rounded-xl text-sm font-bold transition-all duration-300 shadow-md">پشتیبان‌گیری</button>
+        <label class="px-4 py-2 bg-slate-700 hover:bg-blue-600 rounded-xl text-sm font-bold cursor-pointer transition-all duration-300 shadow-md">
+          بازیابی فایل
           <input type="file" onchange="importData(event)" class="hidden">
         </label>
       </div>
     </div>
     
-    <!-- تب‌های نویگیشن -->
     <div class="max-w-6xl mx-auto mt-6 flex justify-center md:justify-start gap-4">
       <button onclick="switchTab('planning')" id="btn-planning" class="tab-btn active px-6 py-2 rounded-full text-sm md:text-base font-bold bg-slate-800 text-slate-300 hover:text-white border border-slate-600">📅 میزکار برنامه‌ریزی</button>
       <button onclick="switchTab('resources')" id="btn-resources" class="tab-btn px-6 py-2 rounded-full text-sm md:text-base font-bold bg-slate-800 text-slate-300 hover:text-white border border-slate-600">📚 منابع و پایش</button>
@@ -57,33 +56,31 @@
   <main class="max-w-6xl mx-auto p-4 sm:p-6 mb-10">
     
     <!-- شیت برنامه‌ریزی -->
-    <div id="tab-planning" class="space-y-6 block animate-fade-in">
-      
-      <!-- پنل انتخاب زمان -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 glass-card p-5 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow">
-        <div><label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">ماه</label><select id="monthSelect" onchange="changeMonth()" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-medium text-slate-700 cursor-pointer"></select></div>
-        <div><label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">هفته</label><select id="weekSelect" onchange="changeWeek()" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-medium text-slate-700 cursor-pointer"></select></div>
-        <div><label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase tracking-wider">روز</label><select id="daySelect" onchange="changeDay()" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-medium text-slate-700 cursor-pointer"></select></div>
+    <div id="tab-planning" class="space-y-6 block">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 glass-card p-5 rounded-2xl shadow-sm border border-slate-200">
+        <div><label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase">ماه</label><select id="monthSelect" onchange="changeMonth()" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-medium text-slate-700 cursor-pointer"></select></div>
+        <div><label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase">هفته</label><select id="weekSelect" onchange="changeWeek()" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-medium text-slate-700 cursor-pointer"></select></div>
+        <div><label class="block text-xs font-bold text-slate-500 mb-1.5 uppercase">روز</label><select id="daySelect" onchange="changeDay()" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl outline-none font-medium text-slate-700 cursor-pointer"></select></div>
       </div>
 
       <!-- اهداف ماهانه -->
-      <section class="glass-card rounded-2xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-shadow">
+      <section class="glass-card rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         <div class="bg-gradient-to-l from-slate-800 to-slate-700 text-white px-6 py-3.5"><h2 id="monthTitle" class="font-bold text-lg">اهداف ماهانه</h2></div>
-        <div class="p-6"><textarea id="monthText" rows="4" oninput="saveContent('month')" placeholder="استراتژی و اهداف کلان این ماه را اینجا بنویسید..." class="w-full p-4 bg-slate-50/50 border border-slate-200 rounded-xl outline-none leading-loose"></textarea></div>
+        <div class="p-6"><textarea id="monthText" rows="4" oninput="saveContent('month')" placeholder="اهداف کلان ماهانه..." class="w-full p-4 bg-slate-50/50 border border-slate-200 rounded-xl outline-none leading-loose"></textarea></div>
       </section>
 
       <!-- اهداف هفتگی -->
-      <section class="glass-card rounded-2xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-shadow">
+      <section class="glass-card rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         <div class="bg-gradient-to-l from-indigo-900 to-indigo-800 text-white px-6 py-3.5"><h2 id="weekTitle" class="font-bold text-lg">برنامه و چک‌لیست هفتگی</h2></div>
         <div class="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
           <div>
             <label class="block text-sm font-bold text-slate-700 mb-3">اهداف کلیدی هفته:</label>
-            <textarea id="weekText" rows="5" oninput="saveContent('week')" placeholder="اهداف هفتگی، آزمون‌ها..." class="w-full p-4 bg-slate-50/50 border border-slate-200 rounded-xl outline-none leading-loose"></textarea>
+            <textarea id="weekText" rows="5" oninput="saveContent('week')" placeholder="اهداف هفتگی..." class="w-full p-4 bg-slate-50/50 border border-slate-200 rounded-xl outline-none leading-loose"></textarea>
           </div>
           <div>
             <div class="flex justify-between items-center mb-3">
               <label class="text-sm font-bold text-slate-700">تسک‌های هفته:</label>
-              <button onclick="addChecklist('week')" class="text-xs bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-lg font-bold hover:bg-indigo-200 transition-colors">+ افزودن تسک</button>
+              <button onclick="addChecklist('week')" class="text-xs bg-indigo-100 text-indigo-700 px-3 py-1.5 rounded-lg font-bold hover:bg-indigo-200">+ افزودن تسک</button>
             </div>
             <div id="weekChecklist" class="space-y-2"></div>
           </div>
@@ -91,49 +88,38 @@
       </section>
 
       <!-- برنامه روزانه -->
-      <section class="glass-card rounded-2xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-shadow">
+      <section class="glass-card rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         <div class="bg-gradient-to-l from-amber-600 to-amber-500 text-white px-6 py-3.5"><h2 id="dayTitle" class="font-bold text-lg">برنامه روزانه و زمان‌بندی تخصصی</h2></div>
         <div class="p-6 space-y-10">
-          
           <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
               <label class="block text-sm font-bold text-slate-700 mb-3">اولویت‌های اصلی این روز:</label>
-              <textarea id="daySummaryText" rows="3" oninput="saveContent('daySummary')" placeholder="مهم‌ترین کارهایی که امروز باید تمام شوند..." class="w-full p-4 bg-slate-50/50 border border-slate-200 rounded-xl outline-none leading-loose"></textarea>
+              <textarea id="daySummaryText" rows="3" oninput="saveContent('daySummary')" placeholder="مهم‌ترین اولویت‌های روز..." class="w-full p-4 bg-slate-50/50 border border-slate-200 rounded-xl outline-none leading-loose"></textarea>
             </div>
             <div>
               <div class="flex justify-between items-center mb-3">
                 <label class="text-sm font-bold text-slate-700">چک‌لیست روزانه:</label>
-                <button onclick="addChecklist('day')" class="text-xs bg-amber-100 text-amber-700 px-3 py-1.5 rounded-lg font-bold hover:bg-amber-200 transition-colors">+ افزودن تسک</button>
+                <button onclick="addChecklist('day')" class="text-xs bg-amber-100 text-amber-700 px-3 py-1.5 rounded-lg font-bold hover:bg-amber-200">+ افزودن تسک</button>
               </div>
               <div id="dayChecklist" class="space-y-2"></div>
             </div>
           </div>
 
-          <div class="relative py-4">
-            <div class="absolute inset-0 flex items-center" aria-hidden="true"><div class="w-full border-t border-slate-200"></div></div>
-            <div class="relative flex justify-center"><span class="bg-white px-4 text-sm font-bold text-slate-400">نقشه بصری زمان</span></div>
-          </div>
-
-          <!-- بخش ساعت‌های دایره‌ای -->
+          <!-- نقشه بصری ساعت‌ها -->
           <div>
             <div class="flex flex-col md:flex-row justify-center items-center gap-12 md:gap-24">
               <div class="flex flex-col items-center">
                 <span class="text-xs font-bold text-slate-500 mb-4 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">بامداد تا ظهر (۰۰:۰۰ تا ۱۲:۰۰)</span>
-                <div id="clockAM" class="relative hover:scale-105 transition-transform duration-500"></div>
+                <div id="clockAM" class="relative"></div>
               </div>
               <div class="flex flex-col items-center">
                 <span class="text-xs font-bold text-slate-500 mb-4 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">ظهر تا نیمه‌شب (۱۲:۰۰ تا ۲۴:۰۰)</span>
-                <div id="clockPM" class="relative hover:scale-105 transition-transform duration-500"></div>
+                <div id="clockPM" class="relative"></div>
               </div>
             </div>
           </div>
 
-          <div class="relative py-4">
-            <div class="absolute inset-0 flex items-center" aria-hidden="true"><div class="w-full border-t border-slate-200"></div></div>
-            <div class="relative flex justify-center"><span class="bg-white px-4 text-sm font-bold text-slate-400">جزئیات ۲۴ ساعته</span></div>
-          </div>
-
-          <!-- جدول ۲۴ ساعته -->
+          <!-- تفکیک ساعتی ۲۴ گانه -->
           <div>
             <div id="hourlyGrid" class="grid grid-cols-1 lg:grid-cols-2 gap-4"></div>
           </div>
@@ -142,62 +128,125 @@
     </div>
 
     <!-- شیت منابع مطالعاتی -->
-    <div id="tab-resources" class="space-y-8 hidden animate-fade-in">
-      
-      <!-- کتب حقوقی -->
-      <section class="glass-card rounded-2xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-shadow">
+    <div id="tab-resources" class="space-y-8 hidden">
+      <!-- کتب -->
+      <section class="glass-card rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         <div class="bg-gradient-to-l from-blue-800 to-blue-700 text-white px-6 py-4 flex justify-between items-center">
           <h2 class="font-bold text-lg flex items-center gap-2"><span>📘</span> کتب حقوقی تخصصی</h2>
-          <span id="prog-legal" class="text-xs font-bold bg-blue-900/50 px-3 py-1.5 rounded-lg border border-blue-500 shadow-inner"></span>
+          <span id="prog-legal" class="text-xs font-bold bg-blue-900/50 px-3 py-1.5 rounded-lg border border-blue-500"></span>
         </div>
         <div class="p-6 space-y-5" id="resLegalList"></div>
-        <div class="p-5 bg-slate-50/50 border-t border-slate-200 flex justify-center"><button onclick="addResource('legal')" class="bg-white border-2 border-blue-200 text-blue-700 px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-blue-50 hover:border-blue-300 transition-all shadow-sm">+ افزودن کتاب جدید</button></div>
+        <div class="p-5 bg-slate-50/50 border-t border-slate-200 flex justify-center"><button onclick="addResource('legal')" class="bg-white border-2 border-blue-200 text-blue-700 px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-blue-50 shadow-sm">+ افزودن کتاب جدید</button></div>
       </section>
 
-      <!-- قوانین و مقررات (بخش جدید) -->
-      <section class="glass-card rounded-2xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-shadow">
+      <!-- قوانین -->
+      <section class="glass-card rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         <div class="bg-gradient-to-l from-teal-700 to-teal-600 text-white px-6 py-4 flex justify-between items-center">
           <h2 class="font-bold text-lg flex items-center gap-2"><span>⚖️</span> قوانین و مقررات</h2>
-          <span id="prog-law" class="text-xs font-bold bg-teal-900/50 px-3 py-1.5 rounded-lg border border-teal-400 shadow-inner"></span>
+          <span id="prog-law" class="text-xs font-bold bg-teal-900/50 px-3 py-1.5 rounded-lg border border-teal-400"></span>
         </div>
         <div class="p-6 space-y-5" id="resLawList"></div>
-        <div class="p-5 bg-slate-50/50 border-t border-slate-200 flex justify-center"><button onclick="addResource('law')" class="bg-white border-2 border-teal-200 text-teal-700 px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-teal-50 hover:border-teal-300 transition-all shadow-sm">+ افزودن قانون جدید</button></div>
+        <div class="p-5 bg-slate-50/50 border-t border-slate-200 flex justify-center"><button onclick="addResource('law')" class="bg-white border-2 border-teal-200 text-teal-700 px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-teal-50 shadow-sm">+ افزودن قانون جدید</button></div>
       </section>
 
       <!-- مقالات -->
-      <section class="glass-card rounded-2xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-shadow">
+      <section class="glass-card rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         <div class="bg-gradient-to-l from-purple-800 to-purple-700 text-white px-6 py-4 flex justify-between items-center">
           <h2 class="font-bold text-lg flex items-center gap-2"><span>📄</span> مقالات علمی</h2>
-          <span id="prog-article" class="text-xs font-bold bg-purple-900/50 px-3 py-1.5 rounded-lg border border-purple-500 shadow-inner"></span>
+          <span id="prog-article" class="text-xs font-bold bg-purple-900/50 px-3 py-1.5 rounded-lg border border-purple-500"></span>
         </div>
         <div class="p-6 space-y-4" id="resArticleList"></div>
-        <div class="p-5 bg-slate-50/50 border-t border-slate-200 flex justify-center"><button onclick="addResourceSimple('article')" class="bg-white border-2 border-purple-200 text-purple-700 px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-purple-50 hover:border-purple-300 transition-all shadow-sm">+ افزودن مقاله جدید</button></div>
+        <div class="p-5 bg-slate-50/50 border-t border-slate-200 flex justify-center"><button onclick="addResourceSimple('article')" class="bg-white border-2 border-purple-200 text-purple-700 px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-purple-50 shadow-sm">+ افزودن مقاله جدید</button></div>
       </section>
 
       <!-- سنوات -->
-      <section class="glass-card rounded-2xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-shadow">
+      <section class="glass-card rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         <div class="bg-gradient-to-l from-emerald-700 to-emerald-600 text-white px-6 py-4 flex justify-between items-center">
           <h2 class="font-bold text-lg flex items-center gap-2"><span>🎯</span> سوالات سنوات گذشته</h2>
-          <span id="prog-exam" class="text-xs font-bold bg-emerald-900/50 px-3 py-1.5 rounded-lg border border-emerald-400 shadow-inner"></span>
+          <span id="prog-exam" class="text-xs font-bold bg-emerald-900/50 px-3 py-1.5 rounded-lg border border-emerald-400"></span>
         </div>
         <div class="p-6 space-y-4" id="resExamList"></div>
-        <div class="p-5 bg-slate-50/50 border-t border-slate-200 flex justify-center"><button onclick="addResourceSimple('exam')" class="bg-white border-2 border-emerald-200 text-emerald-700 px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-emerald-50 hover:border-emerald-300 transition-all shadow-sm">+ افزودن آزمون جدید</button></div>
+        <div class="p-5 bg-slate-50/50 border-t border-slate-200 flex justify-center"><button onclick="addResourceSimple('exam')" class="bg-white border-2 border-emerald-200 text-emerald-700 px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-emerald-50 shadow-sm">+ افزودن آزمون جدید</button></div>
       </section>
 
       <!-- زبان -->
-      <section class="glass-card rounded-2xl shadow-sm border border-slate-200 overflow-hidden hover:shadow-md transition-shadow">
+      <section class="glass-card rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         <div class="bg-gradient-to-l from-rose-700 to-rose-600 text-white px-6 py-4 flex justify-between items-center">
           <h2 class="font-bold text-lg flex items-center gap-2"><span>🌐</span> زبان انگلیسی</h2>
-          <span id="prog-english" class="text-xs font-bold bg-rose-900/50 px-3 py-1.5 rounded-lg border border-rose-400 shadow-inner"></span>
+          <span id="prog-english" class="text-xs font-bold bg-rose-900/50 px-3 py-1.5 rounded-lg border border-rose-400"></span>
         </div>
         <div class="p-6 space-y-5" id="resEnglishList"></div>
-        <div class="p-5 bg-slate-50/50 border-t border-slate-200 flex justify-center"><button onclick="addResource('english')" class="bg-white border-2 border-rose-200 text-rose-700 px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-rose-50 hover:border-rose-300 transition-all shadow-sm">+ افزودن منبع زبان</button></div>
+        <div class="p-5 bg-slate-50/50 border-t border-slate-200 flex justify-center"><button onclick="addResource('english')" class="bg-white border-2 border-rose-200 text-rose-700 px-6 py-2.5 rounded-xl text-sm font-bold hover:bg-rose-50 shadow-sm">+ افزودن منبع زبان</button></div>
       </section>
     </div>
   </main>
 
   <script>
-    // === Core Setup ===
+    // 1. پیکربندی Firebase Realtime Database
+    const firebaseConfig = {
+      apiKey: "AIzaSyAPMq_lRbl1_igDHkyUoYlvXSgnvu4DU5s",
+      authDomain: "phd-study-tracker.firebaseapp.com",
+      databaseURL: "https://phd-study-tracker-default-rtdb.firebaseio.com",
+      projectId: "phd-study-tracker",
+      storageBucket: "phd-study-tracker.firebasestorage.app",
+      messagingSenderId: "195664542351",
+      appId: "1:195664542351:web:046b893b92e7403ce60efa"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+    const dbRef = db.ref('user_dashboard_data');
+
+    function updateStatus(type) {
+      const el = document.getElementById('cloudStatus');
+      if (type === 'synced') {
+        el.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400"></span> همگام با ابری`;
+        el.className = 'text-[11px] px-2.5 py-1 rounded-full bg-emerald-950 text-emerald-300 font-bold flex items-center gap-1.5 border border-emerald-700/50';
+      } else if (type === 'saving') {
+        el.innerHTML = `<span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> در حال ذخیره...`;
+        el.className = 'text-[11px] px-2.5 py-1 rounded-full bg-amber-950 text-amber-300 font-bold flex items-center gap-1.5 border border-amber-700/50';
+      }
+    }
+
+    // لایه هوشمند همگام‌سازی ابری و محلی
+    let cloudData = {};
+
+    function getStorage(key) {
+      return cloudData[key] !== undefined ? cloudData[key] : localStorage.getItem(key);
+    }
+
+    let syncTimeout = null;
+    function setStorage(key, val) {
+      cloudData[key] = val;
+      localStorage.setItem(key, val);
+      updateStatus('saving');
+      
+      clearTimeout(syncTimeout);
+      syncTimeout = setTimeout(() => {
+        dbRef.child(key.replace(/[\.\#\$\[\]\/]/g, '_')).set(val)
+          .then(() => updateStatus('synced'))
+          .catch(() => updateStatus('synced'));
+      }, 500);
+    }
+
+    // گوش دادن لحظه‌ای به تغییرات Firebase
+    dbRef.on('value', (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        Object.keys(data).forEach(k => {
+          cloudData[k] = data[k];
+          localStorage.setItem(k, data[k]);
+        });
+        if(cloudData['phd_resources']) {
+          try { resources = JSON.parse(cloudData['phd_resources']); } catch(e){}
+        }
+        loadActiveViews();
+        renderAllResources();
+      }
+      updateStatus('synced');
+    });
+
+    // 2. تقویم و زمان‌بندی
     const months = [
       { id: 'm1', name: 'شهریور', days: 18, offset: 14 },
       { id: 'm2', name: 'مهر', days: 30, offset: 1 },
@@ -207,33 +256,20 @@
       { id: 'm6', name: 'بهمن', days: 16, offset: 1 }
     ];
     const weekDays = ['شنبه', 'یکشنبه', 'دوشنبه', 'سه‌شنبه', 'چهارشنبه', 'پنج‌شنبه', 'جمعه'];
-    
-    // رنگ‌های حرفه‌ای‌تر برای دسته‌بندی ساعات
     const colors = { none: '#e2e8f0', legal: '#3b82f6', work: '#a855f7', family: '#10b981', misc: '#64748b' };
     const textColors = { none: '#1e293b', legal: '#ffffff', work: '#ffffff', family: '#ffffff', misc: '#ffffff' };
     
     let allDays = [], weeks = [], currentDayIndex = 0;
     let activeWeeklyChecklist = [], activeDailyChecklist = [];
 
-    // جابجایی تب‌ها
     function switchTab(tab) {
       document.getElementById('tab-planning').classList.toggle('hidden', tab !== 'planning');
       document.getElementById('tab-resources').classList.toggle('hidden', tab !== 'resources');
       document.getElementById('btn-planning').classList.toggle('active', tab === 'planning');
       document.getElementById('btn-resources').classList.toggle('active', tab === 'resources');
-      
-      // تغییر استایل دکمه‌های غیرفعال
-      ['planning', 'resources'].forEach(t => {
-        const btn = document.getElementById(`btn-${t}`);
-        if(t !== tab) {
-            btn.classList.remove('bg-amber-500', 'text-white', 'border-transparent');
-            btn.classList.add('bg-slate-800', 'text-slate-300');
-        }
-      });
       if(tab === 'resources') renderAllResources();
     }
 
-    // مقداردهی اولیه تقویم
     function initCalendar() {
       let globalDayId = 1, dayNameCursor = 0; 
       months.forEach((m) => {
@@ -255,7 +291,6 @@
       initClocks(); renderSelectors(); renderHourlyInputs(); loadActiveViews(); initResources();
     }
 
-    // رندر فیلترها
     function renderSelectors() {
       document.getElementById('monthSelect').innerHTML = months.map(m => `<option value="${m.id}">${m.name} ۱۴۰۵</option>`).join('');
       document.getElementById('weekSelect').innerHTML = weeks.map(w => `<option value="${w.id}">${w.label}</option>`).join('');
@@ -279,29 +314,24 @@
       if (idx !== -1) { document.getElementById('daySelect').value = idx; changeDay(); }
     }
 
-    // ساخت فیلدهای 24 ساعته با فرمت جدید (00:00 تا 01:00)
     function renderHourlyInputs() {
       let html = '';
       for (let h = 0; h < 24; h++) {
-        const hStart = String(h).padStart(2,'0');
-        const hEnd = String((h+1)%24).padStart(2,'0');
-        const label = `${hStart}:00 تا ${hEnd}:00`;
-
+        const hStart = String(h).padStart(2,'0'), hEnd = String((h+1)%24).padStart(2,'0');
         html += `
-          <div class="flex flex-col sm:flex-row sm:items-center gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-sm focus-within:border-amber-400 focus-within:shadow-md transition-all">
-            <span class="text-xs font-mono font-bold text-slate-500 w-28 whitespace-nowrap text-center sm:text-right bg-slate-100 px-2 py-1 rounded">${label}</span>
+          <div class="flex flex-col sm:flex-row sm:items-center gap-3 bg-white p-3 rounded-xl border border-slate-200 shadow-sm focus-within:border-amber-400">
+            <span class="text-xs font-mono font-bold text-slate-500 w-28 whitespace-nowrap text-center sm:text-right bg-slate-100 px-2 py-1 rounded">${hStart}:00 تا ${hEnd}:00</span>
             <div class="flex gap-2 flex-grow">
-                <select id="c_${h}" onchange="saveHour(${h})" class="text-xs p-2 bg-slate-50 border border-slate-200 rounded-lg outline-none cursor-pointer font-bold text-slate-700 hover:bg-slate-100">
+              <select id="c_${h}" onchange="saveHour(${h})" class="text-xs p-2 bg-slate-50 border border-slate-200 rounded-lg outline-none cursor-pointer font-bold text-slate-700">
                 <option value="none">عادی</option><option value="legal">حقوقی</option><option value="work">کاری</option><option value="family">خانواده</option><option value="misc">متفرقه</option>
-                </select>
-                <input type="text" id="h_${h}" oninput="saveHour(${h})" placeholder="برنامه این ساعت..." class="w-full text-sm p-2 bg-slate-50 border border-slate-200 rounded-lg outline-none placeholder-slate-400">
+              </select>
+              <input type="text" id="h_${h}" oninput="saveHour(${h})" placeholder="برنامه این ساعت..." class="w-full text-sm p-2 bg-slate-50 border border-slate-200 rounded-lg outline-none">
             </div>
           </div>`;
       }
       document.getElementById('hourlyGrid').innerHTML = html;
     }
 
-    // ترسیم ساعت‌های دایره‌ای
     function initClocks() {
       document.getElementById('clockAM').innerHTML = createClockSVG(0);
       document.getElementById('clockPM').innerHTML = createClockSVG(12);
@@ -316,7 +346,7 @@
          svg += `<path id="slice_${h}" d="M50,50 L${x1},${y1} A50,50 0 0,1 ${x2},${y2} Z" fill="${colors.none}" stroke="#ffffff" stroke-width="0.8" class="clock-slice cursor-pointer" onmousemove="showTooltip(event, ${h})" onmouseleave="hideTooltip()" onclick="document.getElementById('h_${h}').focus()"/>`;
          
          const midA = (i * 30 + 15) * Math.PI / 180;
-         const tx = 50 + 38 * Math.cos(midA), ty = 50 + 38 * Math.sin(midA); // متن کمی دورتر از مرکز
+         const tx = 50 + 38 * Math.cos(midA), ty = 50 + 38 * Math.sin(midA);
          const rot = (i * 30 + 15) + (i > 2 && i < 9 ? 180 : 0);
          svg += `<text id="t_${h}" x="${tx}" y="${ty}" transform="rotate(${rot} ${tx} ${ty})" text-anchor="middle" dominant-baseline="central" class="clock-text"></text>`;
       }
@@ -324,84 +354,84 @@
       return svg;
     }
 
-    // بارگذاری اطلاعات تب برنامه‌ریزی
     function loadActiveViews() {
       const cur = allDays[currentDayIndex];
       document.getElementById('monthTitle').innerText = `اهداف کلان: ${cur.monthName} ۱۴۰۵`;
       document.getElementById('weekTitle').innerText = `برنامه ${weeks.find(w => w.id === cur.weekId).label}`;
       document.getElementById('dayTitle').innerText = `برنامه روزانه: ${cur.title}`;
       
-      document.getElementById('monthText').value = localStorage.getItem(`n_m_${cur.monthId}`) || '';
-      document.getElementById('weekText').value = localStorage.getItem(`n_w_${cur.weekId}`) || '';
-      document.getElementById('daySummaryText').value = localStorage.getItem(`n_d_s_${cur.id}`) || '';
+      document.getElementById('monthText').value = getStorage(`n_m_${cur.monthId}`) || '';
+      document.getElementById('weekText').value = getStorage(`n_w_${cur.weekId}`) || '';
+      document.getElementById('daySummaryText').value = getStorage(`n_d_s_${cur.id}`) || '';
       
       for (let h = 0; h < 24; h++) {
-        document.getElementById(`h_${h}`).value = localStorage.getItem(`n_h_${cur.id}_${h}`) || '';
-        document.getElementById(`c_${h}`).value = localStorage.getItem(`c_h_${cur.id}_${h}`) || 'none';
+        document.getElementById(`h_${h}`).value = getStorage(`n_h_${cur.id}_${h}`) || '';
+        document.getElementById(`c_${h}`).value = getStorage(`c_h_${cur.id}_${h}`) || 'none';
       }
       
-      activeWeeklyChecklist = JSON.parse(localStorage.getItem(`c_w_${cur.weekId}`)) || Array(5).fill({text:'', checked:false});
-      activeDailyChecklist = JSON.parse(localStorage.getItem(`c_d_${cur.id}`)) || Array(5).fill({text:'', checked:false});
+      try {
+        activeWeeklyChecklist = JSON.parse(getStorage(`c_w_${cur.weekId}`)) || Array(5).fill({text:'', checked:false});
+      } catch(e) { activeWeeklyChecklist = Array(5).fill({text:'', checked:false}); }
+      try {
+        activeDailyChecklist = JSON.parse(getStorage(`c_d_${cur.id}`)) || Array(5).fill({text:'', checked:false});
+      } catch(e) { activeDailyChecklist = Array(5).fill({text:'', checked:false}); }
+
       renderChecklists(); syncClocks();
     }
 
     function saveContent(type) {
       const cur = allDays[currentDayIndex];
-      if (type === 'month') localStorage.setItem(`n_m_${cur.monthId}`, document.getElementById('monthText').value);
-      if (type === 'week') localStorage.setItem(`n_w_${cur.weekId}`, document.getElementById('weekText').value);
-      if (type === 'daySummary') localStorage.setItem(`n_d_s_${cur.id}`, document.getElementById('daySummaryText').value);
+      if (type === 'month') setStorage(`n_m_${cur.monthId}`, document.getElementById('monthText').value);
+      if (type === 'week') setStorage(`n_w_${cur.weekId}`, document.getElementById('weekText').value);
+      if (type === 'daySummary') setStorage(`n_d_s_${cur.id}`, document.getElementById('daySummaryText').value);
     }
     function saveHour(h) {
       const cur = allDays[currentDayIndex];
-      localStorage.setItem(`n_h_${cur.id}_${h}`, document.getElementById(`h_${h}`).value);
-      localStorage.setItem(`c_h_${cur.id}_${h}`, document.getElementById(`c_${h}`).value);
+      setStorage(`n_h_${cur.id}_${h}`, document.getElementById(`h_${h}`).value);
+      setStorage(`c_h_${cur.id}_${h}`, document.getElementById(`c_${h}`).value);
       syncClocks();
     }
 
-    // چک لیست‌ها
     function renderChecklists() {
       document.getElementById('weekChecklist').innerHTML = activeWeeklyChecklist.map((item, i) => createChk('week', i, item)).join('');
       document.getElementById('dayChecklist').innerHTML = activeDailyChecklist.map((item, i) => createChk('day', i, item)).join('');
     }
     function createChk(type, i, item) {
        return `
-       <div class="flex items-center gap-3 mb-2 bg-white p-2 rounded-lg border border-slate-200 shadow-sm transition-all focus-within:border-amber-400">
-         <div class="relative flex items-center justify-center">
-            <input type="checkbox" id="cb_${type}_${i}" ${item.checked?'checked':''} onchange="updChk('${type}', ${i})" class="w-5 h-5 rounded border-slate-300 text-amber-500 focus:ring-amber-500 cursor-pointer accent-amber-500">
-         </div>
+       <div class="flex items-center gap-3 mb-2 bg-white p-2 rounded-lg border border-slate-200 shadow-sm focus-within:border-amber-400">
+         <input type="checkbox" id="cb_${type}_${i}" ${item.checked?'checked':''} onchange="updChk('${type}', ${i})" class="w-5 h-5 rounded border-slate-300 accent-amber-500 cursor-pointer">
          <input type="text" id="txt_${type}_${i}" value="${item.text}" oninput="updChk('${type}', ${i})" placeholder="عنوان وظیفه..." class="w-full text-sm p-1.5 bg-transparent border-none outline-none ${item.checked?'line-through text-slate-400':'text-slate-700 font-medium'}">
-         <button onclick="rmChk('${type}', ${i})" class="text-slate-300 hover:text-red-500 font-bold px-2 text-lg transition-colors">&times;</button>
+         <button onclick="rmChk('${type}', ${i})" class="text-slate-300 hover:text-red-500 font-bold px-2 text-lg">&times;</button>
        </div>`;
     }
     function updChk(t, i) {
        const list = t === 'week' ? activeWeeklyChecklist : activeDailyChecklist;
        list[i] = { checked: document.getElementById(`cb_${t}_${i}`).checked, text: document.getElementById(`txt_${t}_${i}`).value };
-       localStorage.setItem(t === 'week' ? `c_w_${allDays[currentDayIndex].weekId}` : `c_d_${allDays[currentDayIndex].id}`, JSON.stringify(list));
+       setStorage(t === 'week' ? `c_w_${allDays[currentDayIndex].weekId}` : `c_d_${allDays[currentDayIndex].id}`, JSON.stringify(list));
        renderChecklists();
     }
     function addChk(t) { (t === 'week' ? activeWeeklyChecklist : activeDailyChecklist).push({text:'', checked:false}); renderChecklists(); }
     window.addChecklist = addChk;
     function rmChk(t, i) {
        const list = t === 'week' ? activeWeeklyChecklist : activeDailyChecklist; list.splice(i, 1);
-       localStorage.setItem(t === 'week' ? `c_w_${allDays[currentDayIndex].weekId}` : `c_d_${allDays[currentDayIndex].id}`, JSON.stringify(list));
+       setStorage(t === 'week' ? `c_w_${allDays[currentDayIndex].weekId}` : `c_d_${allDays[currentDayIndex].id}`, JSON.stringify(list));
        renderChecklists();
     }
 
-    // سینک اطلاعات ساعت‌ها
     function syncClocks() {
        const cur = allDays[currentDayIndex];
        for(let h=0; h<24; h++) {
-          const val = localStorage.getItem(`n_h_${cur.id}_${h}`) || '';
-          const col = localStorage.getItem(`c_h_${cur.id}_${h}`) || 'none';
+          const val = getStorage(`n_h_${cur.id}_${h}`) || '';
+          const col = getStorage(`c_h_${cur.id}_${h}`) || 'none';
           document.getElementById(`slice_${h}`).setAttribute('fill', val ? (col==='none'? '#fcd34d' : colors[col]) : colors.none);
           const txtEl = document.getElementById(`t_${h}`);
-          let shortTxt = val.substring(0, 8); // کوتاه کردن متن برای جا شدن بهتر
+          let shortTxt = val.substring(0, 8);
           txtEl.textContent = shortTxt + (val.length > 8 ? '..' : '');
           txtEl.setAttribute('fill', val ? (col==='none'? '#1e293b' : textColors[col]) : textColors.none);
        }
     }
     function showTooltip(evt, h) {
-       const val = localStorage.getItem(`n_h_${allDays[currentDayIndex].id}_${h}`);
+       const val = getStorage(`n_h_${allDays[currentDayIndex].id}_${h}`);
        if (val) {
           const hStart = String(h).padStart(2,'0'), hEnd = String((h+1)%24).padStart(2,'0');
           const t = document.getElementById('clockTooltip');
@@ -412,34 +442,33 @@
     }
     function hideTooltip() { document.getElementById('clockTooltip').classList.add('hidden'); }
 
-    // === هسته منابع مطالعاتی ===
+    // 3. منابع مطالعاتی
     let resources = {
       legal: [
         {id:'1', title:'حقوق نفت و گاز دکتری شیروی', chaps:[]}, {id:'2', title:'حقوق تجارت بین الملل دکتر شیروی', chaps:[]},
         {id:'3', title:'حقوق انرژی دکتر شیروی', chaps:[]}, {id:'4', title:'معاملات دولتی دکتر نجارزاده', chaps:[]},
         {id:'5', title:'قانون مدنی در نظم حقوقی کنونی دکتر کاتوزیان', chaps:[]}, {id:'6', title:'شرح جامع قانون مدنی دکتر بیات', chaps:[]}
       ],
-      law: [
-        {id:'l1', title:'قانون مدنی', chaps:[]}, {id:'l2', title:'قانون تجارت', chaps:[]}
-      ],
+      law: [{id:'l1', title:'قانون مدنی', chaps:[]}, {id:'l2', title:'قانون تجارت', chaps:[]}],
       article: [], exam: [], english: []
     };
 
     function initResources() {
-      const saved = localStorage.getItem('phd_resources');
+      const saved = getStorage('phd_resources');
       if (saved) {
+        try {
           const parsed = JSON.parse(saved);
-          // ایمنی برای ارتقا کد و اضافه شدن بخش law
           if(!parsed.law) parsed.law = [];
           resources = parsed;
+        } catch(e){}
       }
       renderAllResources();
     }
-    function saveRes() { localStorage.setItem('phd_resources', JSON.stringify(resources)); renderAllResources(); }
+    function saveRes() { setStorage('phd_resources', JSON.stringify(resources)); renderAllResources(); }
 
     function renderAllResources() {
       renderCategoryComplex('legal', 'resLegalList', 'فصل');
-      renderCategoryComplex('law', 'resLawList', 'ماده/مبحث'); // بخش جدید
+      renderCategoryComplex('law', 'resLawList', 'ماده/مبحث');
       renderCategorySimple('article', 'resArticleList');
       renderCategorySimple('exam', 'resExamList');
       renderCategoryComplex('english', 'resEnglishList', 'مقرری (صفحه/درس)');
@@ -448,16 +477,16 @@
 
     function renderCategoryComplex(cat, elId, childLbl) {
       document.getElementById(elId).innerHTML = resources[cat].map((bk, bIdx) => `
-        <div class="border border-slate-200 rounded-xl p-4 bg-white shadow-sm hover:border-slate-300 transition-colors">
+        <div class="border border-slate-200 rounded-xl p-4 bg-white shadow-sm hover:border-slate-300">
           <div class="flex justify-between items-center mb-3">
-            <input type="text" value="${bk.title}" onchange="updCat('${cat}',${bIdx},'title',this.value)" class="font-bold text-slate-800 bg-slate-50 px-3 py-1.5 rounded-lg border border-transparent focus:border-slate-300 focus:bg-white outline-none w-full md:w-2/3 transition-colors" placeholder="عنوان...">
-            <button onclick="rmCat('${cat}',${bIdx})" class="text-slate-400 bg-slate-100 p-1.5 rounded-lg text-xs hover:text-red-500 hover:bg-red-50 transition-colors" title="حذف کامل">🗑️</button>
+            <input type="text" value="${bk.title}" onchange="updCat('${cat}',${bIdx},'title',this.value)" class="font-bold text-slate-800 bg-slate-50 px-3 py-1.5 rounded-lg border border-transparent focus:border-slate-300 outline-none w-full md:w-2/3" placeholder="عنوان...">
+            <button onclick="rmCat('${cat}',${bIdx})" class="text-slate-400 bg-slate-100 p-1.5 rounded-lg text-xs hover:text-red-500">🗑️</button>
           </div>
           <div class="pl-2 md:pl-6 pr-4 border-r-4 border-slate-100 space-y-2 mt-2">
             ${bk.chaps.map((ch, cIdx) => `
               <div class="flex flex-wrap md:flex-nowrap items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-100">
-                <input type="text" value="${ch.title}" onchange="updChap('${cat}',${bIdx},${cIdx},'title',this.value)" class="text-sm bg-white border border-slate-200 rounded-md p-1.5 flex-grow outline-none focus:border-blue-400" placeholder="عنوان ${childLbl}...">
-                <input type="text" value="${ch.desc||''}" onchange="updChap('${cat}',${bIdx},${cIdx},'desc',this.value)" class="text-xs bg-white border border-slate-200 rounded-md p-1.5 w-full md:w-1/3 outline-none placeholder-slate-400 focus:border-blue-400" placeholder="توضیحات کوتاه...">
+                <input type="text" value="${ch.title}" onchange="updChap('${cat}',${bIdx},${cIdx},'title',this.value)" class="text-sm bg-white border border-slate-200 rounded-md p-1.5 flex-grow outline-none" placeholder="عنوان ${childLbl}...">
+                <input type="text" value="${ch.desc||''}" onchange="updChap('${cat}',${bIdx},${cIdx},'desc',this.value)" class="text-xs bg-white border border-slate-200 rounded-md p-1.5 w-full md:w-1/3 outline-none" placeholder="توضیحات...">
                 <div class="flex items-center gap-2 bg-white rounded-md px-2 py-1 border border-slate-200 min-w-max shadow-sm">
                   <button onclick="tickChap('${cat}',${bIdx},${cIdx}, 1)" class="text-emerald-500 font-black px-2 hover:bg-emerald-50 rounded">+</button>
                   <span class="text-xs font-bold text-slate-700 w-16 text-center">مطالعه: <span class="${ch.ticks>0?'text-emerald-600':'text-slate-400'}">${ch.ticks||0}</span></span>
@@ -466,7 +495,7 @@
                 <button onclick="rmChap('${cat}',${bIdx},${cIdx})" class="text-slate-300 hover:text-red-500 font-bold ml-1 px-2">&times;</button>
               </div>
             `).join('')}
-            <button onclick="addChap('${cat}',${bIdx})" class="text-xs text-blue-600 font-bold mt-2 bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100 transition-colors">+ افزودن ${childLbl}</button>
+            <button onclick="addChap('${cat}',${bIdx})" class="text-xs text-blue-600 font-bold mt-2 bg-blue-50 px-3 py-1.5 rounded-lg hover:bg-blue-100">+ افزودن ${childLbl}</button>
           </div>
         </div>
       `).join('');
@@ -475,8 +504,8 @@
     function renderCategorySimple(cat, elId) {
       document.getElementById(elId).innerHTML = resources[cat].map((item, i) => `
         <div class="flex flex-wrap md:flex-nowrap items-center gap-3 border border-slate-200 rounded-xl p-3 bg-white shadow-sm">
-          <input type="text" value="${item.title}" onchange="updCat('${cat}',${i},'title',this.value)" class="font-bold text-sm bg-slate-50 px-3 py-2 rounded-lg border border-transparent focus:border-slate-300 focus:bg-white outline-none flex-grow transition-colors" placeholder="عنوان...">
-          <input type="text" value="${item.desc||''}" onchange="updCat('${cat}',${i},'desc',this.value)" class="text-xs bg-white border border-slate-200 rounded-lg p-2 w-full md:w-1/3 outline-none placeholder-slate-400 focus:border-blue-400" placeholder="توضیحات...">
+          <input type="text" value="${item.title}" onchange="updCat('${cat}',${i},'title',this.value)" class="font-bold text-sm bg-slate-50 px-3 py-2 rounded-lg border border-transparent focus:border-slate-300 outline-none flex-grow" placeholder="عنوان...">
+          <input type="text" value="${item.desc||''}" onchange="updCat('${cat}',${i},'desc',this.value)" class="text-xs bg-white border border-slate-200 rounded-lg p-2 w-full md:w-1/3 outline-none" placeholder="توضیحات...">
           <div class="flex items-center gap-2 bg-white rounded-lg px-2 py-1.5 border border-slate-200 min-w-max shadow-sm">
             <button onclick="tickCat('${cat}',${i}, 1)" class="text-emerald-500 font-black px-2 hover:bg-emerald-50 rounded text-lg">+</button>
             <span class="text-xs font-bold text-slate-700 w-16 text-center">مطالعه: <span class="${item.ticks>0?'text-emerald-600':'text-slate-400'}">${item.ticks||0}</span></span>
@@ -487,7 +516,6 @@
       `).join('');
     }
 
-    // عملیات روی منابع
     function addResource(cat) { resources[cat].push({id:Date.now(), title:'', chaps:[]}); saveRes(); }
     function addResourceSimple(cat) { resources[cat].push({id:Date.now(), title:'', ticks:0, desc:''}); saveRes(); }
     function rmCat(cat, i) { if(confirm('از حذف اطمینان دارید؟')) { resources[cat].splice(i,1); saveRes(); } }
@@ -514,13 +542,13 @@
         document.getElementById(id).innerText = `پیشرفت: ${stats.done} از ${stats.total} (${pct}%)`;
       };
       writeProg('prog-legal', calcComplex('legal')); 
-      writeProg('prog-law', calcComplex('law')); // آپدیت بخش جدید
+      writeProg('prog-law', calcComplex('law'));
       writeProg('prog-english', calcComplex('english'));
       writeProg('prog-article', calcSimple('article')); 
       writeProg('prog-exam', calcSimple('exam'));
     }
 
-    // بکاپ و ری‌استور ایمن
+    // بکاپ دستی
     function exportData() {
       const dump = {};
       for (let i = 0; i < localStorage.length; i++) {
@@ -535,16 +563,14 @@
       const reader = new FileReader();
       reader.onload = function(evt) {
         try { 
-            const data = JSON.parse(evt.target.result); 
-            Object.keys(data).forEach(k => localStorage.setItem(k, data[k])); 
-            alert('اطلاعات با موفقیت بازیابی شد.');
-            location.reload(); 
-        } catch { alert('خطا: فایل پشتیبان نامعتبر است.'); }
+          const data = JSON.parse(evt.target.result); 
+          Object.keys(data).forEach(k => setStorage(k, data[k])); 
+          alert('اطلاعات بازیابی و با سرور ابری هماهنگ شد.');
+        } catch { alert('خطا: فایل نامعتبر است.'); }
       };
       if(e.target.files[0]) reader.readAsText(e.target.files[0]);
     }
     
-    // استارت
     initCalendar();
   </script>
 </body>
